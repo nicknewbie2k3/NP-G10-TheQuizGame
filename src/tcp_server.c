@@ -60,6 +60,11 @@ int tcp_server_accept(TCPServer *server, struct sockaddr_in *client_addr) {
         return -1;
     }
 
+    if (client_addr == NULL) {
+        fprintf(stderr, "Error: NULL client_addr pointer\n");
+        return -1;
+    }
+
     socklen_t client_len = sizeof(*client_addr);
     int client_fd = accept(server->socket_fd, (struct sockaddr *)client_addr, &client_len);
     
@@ -68,9 +73,9 @@ int tcp_server_accept(TCPServer *server, struct sockaddr_in *client_addr) {
         return -1;
     }
 
-    printf("Client connected from %s:%d\n", 
-           inet_ntoa(client_addr->sin_addr), 
-           ntohs(client_addr->sin_port));
+    char client_ip[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(client_addr->sin_addr), client_ip, INET_ADDRSTRLEN);
+    printf("Client connected from %s:%d\n", client_ip, ntohs(client_addr->sin_port));
 
     return client_fd;
 }
