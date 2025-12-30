@@ -1,0 +1,27 @@
+[
+    {
+        "id": "speed1",
+        "question": "What is 7 × 8?",
+        "correctAnswer": "56"
+    },
+    {
+        "id": "speed2", 
+        "question": "Capital of Japan?",
+        "correctAnswer": "tokyo"
+    },
+    {
+        "id": "speed3",
+        "question": "How many continents are there?",
+        "correctAnswer": "7"
+    },
+    {
+        "id": "speed4",
+        "question": "What year did World War II end?",
+        "correctAnswer": "1945"
+    },
+    {
+        "id": "speed5",
+        "question": "How many minutes in an hour?",
+        "correctAnswer": "60"
+    }
+]
