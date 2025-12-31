@@ -78,6 +78,15 @@ function handleMessage(message) {
         case 'round2_start':
             handleRound2Start(message);
             break;
+        case 'speed_question':
+            handleSpeedQuestion(message);
+            break;
+        case 'speed_answer_received':
+            handleSpeedAnswerReceived(message);
+            break;
+        case 'speed_results':
+            handleSpeedResults(message);
+            break;
         case 'game_ended':
             handleGameEnded(message);
             break;
@@ -156,6 +165,26 @@ function submitAnswer(questionId, answer) {
     // Disable all options
     const options = document.querySelectorAll('.option-btn');
     options.forEach(btn => btn.disabled = true);
+}
+
+// Submit speed answer
+function submitSpeedAnswer(event) {
+    event.preventDefault();
+    
+    const answer = document.getElementById('speed-answer-input').value.trim();
+    
+    if (!answer) {
+        showError('Please enter an answer');
+        return;
+    }
+    
+    sendMessage({
+        type: 'submit_speed_answer',
+        questionId: currentQuestion.id,
+        answer: answer
+    });
+    
+    console.log('Speed answer submitted:', answer);
 }
 
 // Next question (host only)
@@ -308,7 +337,70 @@ function handlePlayerEliminated(message) {
 
 // Handle Round 2 start
 function handleRound2Start(message) {
-    showNotification('Round 2: Turn-Based Questions!');
+    console.log('Round 2 starting - Speed Question Phase!');
+    // Just wait for speed_question message
+}
+
+// Handle speed question
+function handleSpeedQuestion(message) {
+    const question = message.question;
+    currentQuestion = question;
+    
+    document.getElementById('speed-question-text').textContent = question.text;
+    document.getElementById('speed-answer-input').value = '';
+    document.getElementById('speed-answer-input').focus();
+    document.getElementById('speed-waiting').style.display = 'none';
+    
+    showScreen('speed-question-screen');
+}
+
+// Handle speed answer received
+function handleSpeedAnswerReceived(message) {
+    document.getElementById('speed-waiting').style.display = 'block';
+    document.getElementById('speed-answer-form').style.display = 'none';
+}
+
+// Handle speed results
+function handleSpeedResults(message) {
+    const results = message.results;
+    const content = document.getElementById('speed-results-content');
+    
+    let html = '<div class="leaderboard">';
+    html += '<h3>Answer Order (Fastest First):</h3>';
+    html += '<ol class="speed-results-list">';
+    
+    results.forEach((result, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        const correct = result.correct ? '✅' : '❌';
+        html += `
+            <li class="speed-result-item ${result.correct ? 'correct' : 'incorrect'}">
+                <span class="medal">${medal}</span>
+                <span class="player-name">${result.playerName}</span>
+                <span class="answer">${result.answer}</span>
+                <span class="status">${correct}</span>
+                <span class="time">${result.responseTime.toFixed(2)}s</span>
+            </li>
+        `;
+    });
+    
+    html += '</ol></div>';
+    
+    if (message.eliminated) {
+        html += `<div class="elimination-notice">
+            <p>⚠️ <strong>${message.eliminated.playerName}</strong> was eliminated (slowest/incorrect)</p>
+        </div>`;
+    }
+    
+    content.innerHTML = html;
+    
+    // Show host controls if host
+    if (isHost) {
+        document.getElementById('speed-host-controls').style.display = 'none';
+    } else {
+        document.getElementById('speed-host-controls').style.display = 'block';
+    }
+    
+    showScreen('speed-results-screen');
 }
 
 // Handle game ended
@@ -456,6 +548,12 @@ window.addEventListener('DOMContentLoaded', () => {
         if (onsubmitAttr && onsubmitAttr.includes('joinGame')) {
             e.preventDefault();
             joinGame(e);
+        }
+        
+        // Handle speed answer form
+        if (form.id === 'speed-answer-form') {
+            e.preventDefault();
+            submitSpeedAnswer(e);
         }
     });
 });

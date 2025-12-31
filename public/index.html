@@ -148,6 +148,52 @@
                 </div>
             </div>
             
+            <!-- Round 2 Speed Question Screen -->
+            <div id="speed-question-screen" class="screen">
+                <div class="question-container">
+                    <div class="question-header">
+                        <div class="round-info">
+                            Round 2 - Speed Question ⚡
+                        </div>
+                        <div class="speed-info">No Time Limit - Answer as fast as you can!</div>
+                    </div>
+                    
+                    <div class="question-text" id="speed-question-text">
+                        Loading question...
+                    </div>
+                    
+                    <form id="speed-answer-form">
+                        <div class="form-group">
+                            <input type="text" id="speed-answer-input" class="input-text" 
+                                   placeholder="Type your answer..." autocomplete="off" required>
+                        </div>
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary btn-large">
+                                Submit Answer ⚡
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="speed-waiting" class="waiting-message" style="display: none;">
+                        <p>Answer submitted! Waiting for other players...</p>
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Speed Question Results Screen -->
+            <div id="speed-results-screen" class="screen">
+                <div class="results-container">
+                    <h2>⚡ Speed Question Results</h2>
+                    <div id="speed-results-content">
+                        <!-- Speed results will be inserted here -->
+                    </div>
+                    <div class="waiting-message" id="speed-host-controls" style="display: none;">
+                        <p>Waiting for host to continue...</p>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Eliminated Screen -->
             <div id="eliminated-screen" class="screen">
                 <div class="eliminated-container">

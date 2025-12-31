@@ -60,6 +60,15 @@ std::shared_ptr<Player> findPlayerByWsi(std::shared_ptr<Game> game, struct lws* 
     return nullptr;
 }
 
+std::shared_ptr<Player> findPlayerById(std::shared_ptr<Game> game, const std::string& playerId) {
+    for (const auto& player : game->players) {
+        if (player->id == playerId) {
+            return player;
+        }
+    }
+    return nullptr;
+}
+
 std::shared_ptr<Game> findGameByWsi(struct lws* wsi, ServerContext* ctx) {
     auto it = ctx->wsToGamePin.find(wsi);
     if (it != ctx->wsToGamePin.end()) {
@@ -403,6 +412,93 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
     json response;
     response["type"] = "speed_answer_received";
     sendToClient(wsi, response.dump());
+    
+    std::cout << "📝 Speed answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
+    
+    // Check if all active players have answered
+    size_t activePlayerCount = 0;
+    for (const auto& p : game->players) {
+        if (!p->isEliminated) {
+            activePlayerCount++;
+        }
+    }
+    
+    if (game->speedResponses.size() >= activePlayerCount) {
+        // All players have answered - send results
+        std::cout << "✅ All players answered speed question, sending results..." << std::endl;
+        
+        // Get the correct answer (assuming first speed question for now)
+        std::string correctAnswer = "";
+        if (!ctx->speedQuestions.empty()) {
+            correctAnswer = ctx->speedQuestions[0].correctAnswer;
+        }
+        
+        // Build results array sorted by response time
+        std::vector<std::pair<std::string, std::pair<std::string, long>>> sortedResponses(
+            game->speedResponses.begin(), 
+            game->speedResponses.end()
+        );
+        
+        std::sort(sortedResponses.begin(), sortedResponses.end(),
+            [](const auto& a, const auto& b) {
+                return a.second.second < b.second.second; // Sort by response time
+            });
+        
+        json results;
+        results["type"] = "speed_results";
+        results["results"] = json::array();
+        
+        std::string slowestPlayerId;
+        std::string slowestPlayerName;
+        
+        for (const auto& [playerId, respPair] : sortedResponses) {
+            auto p = findPlayerById(game, playerId);
+            if (!p) continue;
+            
+            const std::string& playerAnswer = respPair.first;
+            long responseTime = respPair.second;
+            
+            // Check if answer is correct (case-insensitive)
+            std::string lowerAnswer = playerAnswer;
+            std::transform(lowerAnswer.begin(), lowerAnswer.end(), lowerAnswer.begin(), ::tolower);
+            std::string lowerCorrect = correctAnswer;
+            std::transform(lowerCorrect.begin(), lowerCorrect.end(), lowerCorrect.begin(), ::tolower);
+            
+            bool isCorrect = (lowerAnswer == lowerCorrect);
+            
+            json playerResult;
+            playerResult["playerId"] = playerId;
+            playerResult["playerName"] = p->name;
+            playerResult["answer"] = playerAnswer;
+            playerResult["responseTime"] = responseTime / 1000.0; // Convert to seconds
+            playerResult["correct"] = isCorrect;
+            
+            results["results"].push_back(playerResult);
+            
+            // Track slowest player (or first incorrect)
+            if (!isCorrect || slowestPlayerId.empty()) {
+                slowestPlayerId = playerId;
+                slowestPlayerName = p->name;
+            }
+        }
+        
+        // Eliminate the slowest/incorrect player
+        if (!slowestPlayerId.empty()) {
+            auto eliminatedPlayer = findPlayerById(game, slowestPlayerId);
+            if (eliminatedPlayer) {
+                eliminatedPlayer->isEliminated = true;
+                results["eliminated"]["playerId"] = slowestPlayerId;
+                results["eliminated"]["playerName"] = slowestPlayerName;
+                
+                std::cout << "❌ Player eliminated: " << slowestPlayerName << std::endl;
+            }
+        }
+        
+        broadcastToGame(game->pin, results.dump(), nullptr, ctx);
+        
+        // Clear speed responses for next round
+        game->speedResponses.clear();
+    }
 }
 
 void handleDisconnection(struct lws* wsi, ServerContext* ctx) {

@@ -428,6 +428,88 @@ body {
     }
 }
 
+/* Speed Question Styles */
+.speed-info {
+    text-align: center;
+    color: #ff9800;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
+
+#speed-answer-input {
+    font-size: 1.2rem;
+    padding: 15px;
+    text-align: center;
+}
+
+.speed-results-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+
+.speed-result-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #6c757d;
+}
+
+.speed-result-item.correct {
+    border-left-color: #28a745;
+    background: #d4edda;
+}
+
+.speed-result-item.incorrect {
+    border-left-color: #dc3545;
+    background: #f8d7da;
+}
+
+.speed-result-item .medal {
+    font-size: 1.5rem;
+    min-width: 30px;
+}
+
+.speed-result-item .player-name {
+    flex: 1;
+    font-weight: 600;
+}
+
+.speed-result-item .answer {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.speed-result-item .status {
+    font-size: 1.2rem;
+}
+
+.speed-result-item .time {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 80px;
+    text-align: right;
+}
+
+.elimination-notice {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.elimination-notice p {
+    margin: 0;
+    color: #856404;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .app-header h1 {
