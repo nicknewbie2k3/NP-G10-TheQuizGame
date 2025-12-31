@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Quiz Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <h1>🎯 Quiz Game</h1>
+        </header>
+        
+        <main id="main-content">
+            <!-- Landing Page -->
+            <div id="landing-page" class="screen active">
+                <div class="landing-container">
+                    <h2>Welcome to Quiz Game!</h2>
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-large" onclick="showHostGame()">
+                            🎮 Host a Game
+                        </button>
+                        <button class="btn btn-secondary btn-large" onclick="showJoinGame()">
+                            👥 Join Game
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Join Game Screen -->
+            <div id="join-game" class="screen">
+                <div class="form-container">
+                    <h2>Join Game</h2>
+                    <form onsubmit="joinGame(event)">
+                        <div class="form-group">
+                            <label for="game-pin">Game PIN:</label>
+                            <input type="text" id="game-pin" class="input-text" 
+                                   placeholder="Enter 6-digit PIN" maxlength="6" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="player-name">Your Name:</label>
+                            <input type="text" id="player-name" class="input-text" 
+                                   placeholder="Enter your name" required>
+                        </div>
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary">Join</button>
+                            <button type="button" class="btn btn-secondary" onclick="showLanding()">Back</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Host Lobby Screen -->
+            <div id="host-lobby" class="screen">
+                <div class="lobby-container">
+                    <h2>Game Lobby</h2>
+                    <div class="pin-display">
+                        <div class="pin-label">Game PIN:</div>
+                        <div class="pin-code" id="host-pin">------</div>
+                        <div class="pin-subtitle">Share this PIN with players</div>
+                    </div>
+                    
+                    <div class="players-section">
+                        <h3>Players (<span id="player-count">0</span>)</h3>
+                        <div id="player-list" class="player-list">
+                            <p class="empty-message">Waiting for players to join...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-large" onclick="startGame()" id="start-btn" disabled>
+                            🚀 Start Game
+                        </button>
+                        <button class="btn btn-secondary" onclick="endGame()">End Game</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Player Lobby Screen -->
+            <div id="player-lobby" class="screen">
+                <div class="lobby-container">
+                    <h2>Waiting Room</h2>
+                    <div class="waiting-message">
+                        <p>Waiting for host to start the game...</p>
+                        <div class="spinner"></div>
+                    </div>
+                    
+                    <div class="players-section">
+                        <h3>Players in Game:</h3>
+                        <div id="player-lobby-list" class="player-list"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Screen -->
+            <div id="question-screen" class="screen">
+                <div class="question-container">
+                    <div class="question-header">
+                        <div class="round-info">
+                            Round <span id="current-round">1</span> - 
+                            Question <span id="question-number">1</span>/<span id="total-questions">5</span>
+                        </div>
+                        <div class="timer" id="timer">15</div>
+                    </div>
+                    
+                    <div class="question-text" id="question-text">
+                        Loading question...
+                    </div>
+                    
+                    <div class="options-grid" id="options-grid">
+                        <!-- Options will be inserted here -->
+                    </div>
+                    
+                    <div id="answer-feedback" class="answer-feedback hidden">
+                        <!-- Feedback will be shown here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Results Screen -->
+            <div id="results-screen" class="screen">
+                <div class="results-container">
+                    <h2>Question Results</h2>
+                    <div id="results-content">
+                        <!-- Results will be inserted here -->
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="nextQuestion()" id="next-question-btn">
+                            Next Question →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Round Complete Screen -->
+            <div id="round-complete" class="screen">
+                <div class="round-complete-container">
+                    <h2>Round Complete!</h2>
+                    <div id="round-results">
+                        <!-- Round results will be inserted here -->
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-large" onclick="nextRound()">
+                            Continue to Next Round →
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Round 2 Speed Question Screen -->
+            <div id="speed-question-screen" class="screen">
+                <div class="question-container">
+                    <div class="question-header">
+                        <div class="round-info">
+                            Round 2 - Speed Question ⚡
+                        </div>
+                        <div class="speed-info">No Time Limit - Answer as fast as you can!</div>
+                    </div>
+                    
+                    <div class="question-text" id="speed-question-text">
+                        Loading question...
+                    </div>
+                    
+                    <form id="speed-answer-form">
+                        <div class="form-group">
+                            <input type="text" id="speed-answer-input" class="input-text" 
+                                   placeholder="Type your answer..." autocomplete="off" required>
+                        </div>
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary btn-large">
+                                Submit Answer ⚡
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="speed-waiting" class="waiting-message" style="display: none;">
+                        <p>Answer submitted! Waiting for other players...</p>
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Speed Question Results Screen -->
+            <div id="speed-results-screen" class="screen">
+                <div class="results-container">
+                    <h2>⚡ Speed Question Results</h2>
+                    <div id="speed-results-content">
+                        <!-- Speed results will be inserted here -->
+                    </div>
+                    <div class="waiting-message" id="speed-host-controls" style="display: none;">
+                        <p>Waiting for host to continue...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Eliminated Screen -->
+            <div id="eliminated-screen" class="screen">
+                <div class="eliminated-container">
+                    <h2 class="eliminated-title">❌ You've Been Eliminated</h2>
+                    <p class="eliminated-message">
+                        Thanks for playing! You can watch the remaining players compete.
+                    </p>
+                    <div class="spectator-mode">
+                        <h3>👀 Spectator Mode</h3>
+                        <div id="spectator-info">
+                            <!-- Game info for spectators -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game Over Screen -->
+            <div id="game-over" class="screen">
+                <div class="game-over-container">
+                    <h2>🎉 Game Over!</h2>
+                    <div id="final-results">
+                        <!-- Final results will be inserted here -->
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary btn-large" onclick="showLanding()">
+                            Back to Home
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>

@@ -37,9 +37,11 @@ This project is a complete **C++ implementation** of a multiplayer quiz game wit
 - **libwebsockets**: WebSocket library
 - **nlohmann-json**: JSON parsing library (header-only)
 
-> **💡 Windows Users**: Use WSL for best Linux compatibility. See [WSL_GUIDE.md](docs/WSL_GUIDE.md)
+> **💡 Windows Users**: Use WSL for best Linux compatibility.
 
-### 1. Install Dependencies
+### Installation & Setup (Complete Guide)
+
+**Step 1: Install Dependencies**
 
 **Ubuntu/Debian (including WSL):**
 ```bash
@@ -52,50 +54,100 @@ sudo apt-get install build-essential cmake libwebsockets-dev nlohmann-json3-dev
 brew install cmake libwebsockets nlohmann-json
 ```
 
-**Windows (WSL - Recommended):**
+**Step 2: Clone the Repository**
 ```bash
-# From PowerShell, enter WSL
-wsl -d Ubuntu-24.04
-
-# Then run Ubuntu commands above
+git clone https://github.com/nicknewbie2k3/NP-G10-TheQuizGame.git
+cd NP-G10-TheQuizGame
 ```
 
-### 2. Build the Project
-
-**Option A: Using Make**
+**Step 3: Build the Project**
 ```bash
 make -f Makefile.cpp all
 ```
 
-**Option B: Using CMake**
-```bash
-mkdir build && cd build
-cmake ..
-make
-```
+This will:
+- Compile the game server (WebSocket on port 8080)
+- Compile the HTTP server (on port 3001)
+- Copy question files to `build/questions/`
+- Copy web files to `build/public/`
 
-### 3. Run the Servers
+**Step 4: Run Both Servers**
 
-**Terminal 1 - WebSocket Game Server:**
-```bash
-cd build
-./game_server
-# Server starts on port 8080
-```
-
-**Terminal 2 - HTTP Server:**
+**From WSL/Linux Terminal:**
 ```bash
 cd build
-./http_server
-# Server starts on port 3001
+
+# Terminal 1: Start Game Server
+nohup ./game_server > game_server.log 2>&1 & echo $! > game_server.pid
+
+# Terminal 2: Start HTTP Server  
+nohup ./http_server > http_server.log 2>&1 & echo $! > http_server.pid
 ```
 
-### 4. Play the Game
-1. Open browser to `http://localhost:3001`
-2. **Host**: Click "Host a Game" → Get PIN
-3. **Players**: Click "Join Game" → Enter PIN and name
-4. **Host**: Click "Start Game" when ready (minimum 2 players)
-5. Enjoy the quiz game!
+**From PowerShell (Windows):**
+```powershell
+# Terminal 1: Start Game Server
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/path/to/NP-G10-TheQuizGame/build && nohup ./game_server > game_server.log 2>&1 & echo \`$! > game_server.pid"
+
+# Terminal 2: Start HTTP Server
+wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/path/to/NP-G10-TheQuizGame/build && nohup ./http_server > http_server.log 2>&1 & echo \`$! > http_server.pid"
+```
+
+**Step 5: Play the Game**
+
+1. Open your browser to **`http://localhost:3001`**
+2. **Host's Actions**:
+   - Click "🎮 Host a Game"
+   - Share the PIN with other players
+   - Wait for players to join
+   - Click "🚀 Start Game" (minimum 2 players)
+3. **Players' Actions**:
+   - Click "👥 Join Game"
+   - Enter the PIN and your name
+   - Wait for host to start
+4. **Play**:
+   - **Round 1**: Answer multiple-choice questions (15 seconds each)
+   - **Round 2**: Speed questions (no time limit, fastest answer wins)
+   - **Round 3**: Final showdown between last 2 players
+
+### Stopping the Servers
+
+**From WSL/Linux:**
+```bash
+cd build
+kill $(cat game_server.pid) && rm game_server.pid
+kill $(cat http_server.pid) && rm http_server.pid
+```
+
+**Check Server Status:**
+```bash
+ps aux | grep -E '(game_server|http_server)' | grep -v grep
+```
+
+### Troubleshooting Build Issues
+
+**Error: Command not found (game_server/http_server)**
+- Make sure you're in the `build/` directory
+- Run `make -f Makefile.cpp all` first to compile
+
+**Error: libwebsockets not found**
+```bash
+sudo apt-get install libwebsockets-dev
+```
+
+**Error: nlohmann/json.hpp not found**
+```bash
+sudo apt-get install nlohmann-json3-dev
+```
+
+**Error: Port 8080 or 3001 already in use**
+```bash
+# Find process using the port
+lsof -i :8080  # or :3001
+
+# Kill the process
+kill -9 <PID>
+```
 
 ## � Project Structure
 

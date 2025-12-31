@@ -1,0 +1,146 @@
+[
+    {
+        "id": "pack1",
+        "title": "🌍 Geography Masters",
+        "description": "World capitals, countries, and landmarks",
+        "questions": [
+            { "id": "geo1", "text": "What is the capital of Australia?", "answer": "Canberra" },
+            { "id": "geo2", "text": "Which country has the most time zones?", "answer": "France" },
+            { "id": "geo3", "text": "What is the smallest country in the world?", "answer": "Vatican City" },
+            { "id": "geo4", "text": "Which river flows through Egypt?", "answer": "Nile" },
+            { "id": "geo5", "text": "What is the highest mountain in Africa?", "answer": "Mount Kilimanjaro" }
+        ]
+    },
+    {
+        "id": "pack2",
+        "title": "🔬 Science & Nature",
+        "description": "Biology, chemistry, physics, and natural world",
+        "questions": [
+            { "id": "sci1", "text": "What gas do plants absorb during photosynthesis?", "answer": "Carbon dioxide" },
+            { "id": "sci2", "text": "How many bones are in an adult human body?", "answer": "206" },
+            { "id": "sci3", "text": "What is the chemical symbol for gold?", "answer": "Au" },
+            { "id": "sci4", "text": "Which planet is closest to the sun?", "answer": "Mercury" },
+            { "id": "sci5", "text": "What type of animal is a whale?", "answer": "Mammal" }
+        ]
+    },
+    {
+        "id": "pack3",
+        "title": "🎬 Movies & Entertainment",
+        "description": "Films, actors, directors, and pop culture",
+        "questions": [
+            { "id": "mov1", "text": "Who directed the movie 'Jaws'?", "answer": "Steven Spielberg" },
+            { "id": "mov2", "text": "Which movie won the Oscar for Best Picture in 2020?", "answer": "Parasite" },
+            { "id": "mov3", "text": "What is the highest-grossing film of all time?", "answer": "Avatar" },
+            { "id": "mov4", "text": "Who played Jack in Titanic?", "answer": "Leonardo DiCaprio" },
+            { "id": "mov5", "text": "Which Disney movie features the song 'Let It Go'?", "answer": "Frozen" }
+        ]
+    },
+    {
+        "id": "pack4",
+        "title": "📚 Literature & Books",
+        "description": "Classic and modern literature, authors, and stories",
+        "questions": [
+            { "id": "lit1", "text": "Who wrote 'Pride and Prejudice'?", "answer": "Jane Austen" },
+            { "id": "lit2", "text": "What is the first book in the Harry Potter series?", "answer": "Harry Potter and the Philosopher's Stone" },
+            { "id": "lit3", "text": "Who wrote '1984'?", "answer": "George Orwell" },
+            { "id": "lit4", "text": "What is the first line of 'A Tale of Two Cities'?", "answer": "It was the best of times, it was the worst of times" },
+            { "id": "lit5", "text": "Who wrote 'The Great Gatsby'?", "answer": "F. Scott Fitzgerald" }
+        ]
+    },
+    {
+        "id": "pack5",
+        "title": "🏆 Sports & Games",
+        "description": "Athletics, competitions, and recreational activities",
+        "questions": [
+            { "id": "spo1", "text": "How many players are on a basketball team on the court?", "answer": "5" },
+            { "id": "spo2", "text": "In which sport would you perform a slam dunk?", "answer": "Basketball" },
+            { "id": "spo3", "text": "What is the maximum score possible in ten-pin bowling?", "answer": "300" },
+            { "id": "spo4", "text": "Which country hosted the 2016 Summer Olympics?", "answer": "Brazil" },
+            { "id": "spo5", "text": "How many holes are there on a standard golf course?", "answer": "18" }
+        ]
+    },
+    {
+        "id": "pack6",
+        "title": "🎵 Music & Arts",
+        "description": "Musicians, instruments, paintings, and creative arts",
+        "questions": [
+            { "id": "mus1", "text": "Which instrument has 88 keys?", "answer": "Piano" },
+            { "id": "mus2", "text": "Who composed 'The Four Seasons'?", "answer": "Vivaldi" },
+            { "id": "mus3", "text": "What does 'forte' mean in music?", "answer": "Loud" },
+            { "id": "mus4", "text": "Which artist painted 'Starry Night'?", "answer": "Vincent van Gogh" },
+            { "id": "mus5", "text": "How many strings does a standard guitar have?", "answer": "6" }
+        ]
+    },
+    {
+        "id": "pack7",
+        "title": "🍕 Food & Drink",
+        "description": "Cuisine, cooking, beverages, and culinary traditions",
+        "questions": [
+            { "id": "foo1", "text": "What spice is derived from the Crocus flower?", "answer": "Saffron" },
+            { "id": "foo2", "text": "Which country is famous for inventing pizza?", "answer": "Italy" },
+            { "id": "foo3", "text": "What is the main ingredient in guacamole?", "answer": "Avocado" },
+            { "id": "foo4", "text": "Which wine is traditionally used in a Mimosa cocktail?", "answer": "Champagne" },
+            { "id": "foo5", "text": "What type of pastry is used to make profiteroles?", "answer": "Choux pastry" }
+        ]
+    },
+    {
+        "id": "pack8",
+        "title": "📖 History & Culture",
+        "description": "World history, civilizations, and cultural knowledge",
+        "questions": [
+            { "id": "his1", "text": "In which year did World War II end?", "answer": "1945" },
+            { "id": "his2", "text": "Who was the first person to walk on the moon?", "answer": "Neil Armstrong" },
+            { "id": "his3", "text": "Which ancient wonder of the world was located in Alexandria?", "answer": "The Lighthouse of Alexandria" },
+            { "id": "his4", "text": "Who was the first President of the United States?", "answer": "George Washington" },
+            { "id": "his5", "text": "In which year did the Berlin Wall fall?", "answer": "1989" }
+        ]
+    },
+    {
+        "id": "pack9",
+        "title": "💻 Technology & Innovation",
+        "description": "Computing, inventions, and modern technology",
+        "questions": [
+            { "id": "tec1", "text": "Who founded Microsoft?", "answer": "Bill Gates and Paul Allen" },
+            { "id": "tec2", "text": "What does 'HTTP' stand for?", "answer": "HyperText Transfer Protocol" },
+            { "id": "tec3", "text": "Which company created the iPhone?", "answer": "Apple" },
+            { "id": "tec4", "text": "What year was the World Wide Web invented?", "answer": "1989" },
+            { "id": "tec5", "text": "What does 'AI' stand for?", "answer": "Artificial Intelligence" }
+        ]
+    },
+    {
+        "id": "pack10",
+        "title": "🌟 Pop Culture & Trends",
+        "description": "Internet culture, memes, and contemporary phenomena",
+        "questions": [
+            { "id": "pop1", "text": "What social media platform is known for 280-character messages?", "answer": "Twitter" },
+            { "id": "pop2", "text": "Which video became the first to reach 1 billion views on YouTube?", "answer": "Gangnam Style" },
+            { "id": "pop3", "text": "What does 'LOL' stand for?", "answer": "Laugh Out Loud" },
+            { "id": "pop4", "text": "Which app is known for disappearing messages?", "answer": "Snapchat" },
+            { "id": "pop5", "text": "What is the most popular video game of 2020-2021?", "answer": "Among Us" }
+        ]
+    },
+    {
+        "id": "pack11",
+        "title": "🧮 Math & Logic",
+        "description": "Numbers, equations, puzzles, and logical thinking",
+        "questions": [
+            { "id": "mat1", "text": "What is the value of π (pi) to 2 decimal places?", "answer": "3.14" },
+            { "id": "mat2", "text": "What is 15% of 200?", "answer": "30" },
+            { "id": "mat3", "text": "How many sides does a hexagon have?", "answer": "6" },
+            { "id": "mat4", "text": "What is the square root of 144?", "answer": "12" },
+            { "id": "mat5", "text": "In a right triangle, what is the longest side called?", "answer": "Hypotenuse" }
+        ]
+    },
+    {
+        "id": "pack12",
+        "title": "🌈 Mixed Trivia",
+        "description": "Random facts, surprising knowledge, and fun trivia",
+        "questions": [
+            { "id": "mix1", "text": "How many days are there in a leap year?", "answer": "366" },
+            { "id": "mix2", "text": "What is the hardest natural substance on Earth?", "answer": "Diamond" },
+            { "id": "mix3", "text": "Which mammal is known to have the most powerful bite?", "answer": "Hippopotamus" },
+            { "id": "mix4", "text": "What is the smallest bone in the human body?", "answer": "Stapes (in the ear)" },
+            { "id": "mix5", "text": "How many hearts does an octopus have?", "answer": "3" }
+        ]
+    }
+]
