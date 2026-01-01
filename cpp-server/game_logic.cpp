@@ -448,8 +448,13 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         results["type"] = "speed_results";
         results["results"] = json::array();
         
-        std::string slowestPlayerId;
-        std::string slowestPlayerName;
+        // std::string slowestPlayerId;
+        // std::string slowestPlayerName;
+
+        // List of incorrect players, fastest first
+        std::vector<std::string> incorrectPlayers;
+        std::string eliminatedId;
+        std::string eliminatedName;
         
         for (const auto& [playerId, respPair] : sortedResponses) {
             auto p = findPlayerById(game, playerId);
@@ -475,24 +480,62 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
             
             results["results"].push_back(playerResult);
             
-            // Track slowest player (or first incorrect)
-            if (!isCorrect || slowestPlayerId.empty()) {
-                slowestPlayerId = playerId;
-                slowestPlayerName = p->name;
+            // // Track slowest player (or first incorrect)
+            // if (!isCorrect || slowestPlayerId.empty()) {
+            //     slowestPlayerId = playerId;
+            //     slowestPlayerName = p->name;
+            // }
+
+            // Collect incorrect players
+            if (!isCorrect) {
+                incorrectPlayers.push_back(playerId);
             }
         }
         
-        // Eliminate the slowest/incorrect player
-        if (!slowestPlayerId.empty()) {
-            auto eliminatedPlayer = findPlayerById(game, slowestPlayerId);
-            if (eliminatedPlayer) {
-                eliminatedPlayer->isEliminated = true;
-                results["eliminated"]["playerId"] = slowestPlayerId;
-                results["eliminated"]["playerName"] = slowestPlayerName;
-                
-                std::cout << "❌ Player eliminated: " << slowestPlayerName << std::endl;
+        // If no incorrect players, eliminate the slowest
+        if (incorrectPlayers.empty()) {
+            if (!sortedResponses.empty()) {
+                eliminatedId = sortedResponses.back().first;
             }
         }
+        // Else eliminate the slowest incorrect player
+        else {
+            eliminatedId = incorrectPlayers.back();
+        }
+        // Take eliminated player's name
+        if (!eliminatedId.empty()) {
+            auto p = findPlayerById(game, eliminatedId);
+            if (p) eliminatedName = p->name;
+        }
+        // Eliminate that player
+        if (!eliminatedId.empty()) {
+            auto eliminatedPlayer = findPlayerById(game, eliminatedId);
+            if (eliminatedPlayer) {
+                eliminatedPlayer->isEliminated = true;
+                results["eliminated"]["playerId"] = eliminatedId;
+                results["eliminated"]["playerName"] = eliminatedName;
+                
+                // if (incorrectPlayers.empty()) {
+                //      results["eliminated"]["reason"] = "Slowest response";
+                // } else {
+                //      results["eliminated"]["reason"] = "Incorrect and slowest";
+                // }
+
+                std::cout << "❌ Player eliminated: " << eliminatedName << std::endl;
+            }
+        }
+        // // Eliminate the slowest/incorrect player
+        // if (!slowestPlayerId.empty()) {
+        //     auto eliminatedPlayer = findPlayerById(game, slowestPlayerId);
+        //     if (eliminatedPlayer) {
+        //         eliminatedPlayer->isEliminated = true;
+        //         results["eliminated"]["playerId"] = slowestPlayerId;
+        //         results["eliminated"]["playerName"] = slowestPlayerName;
+                
+        //         std::cout << "❌ Player eliminated: " << slowestPlayerName << std::endl;
+        //     }
+        // }
+
         
         broadcastToGame(game->pin, results.dump(), nullptr, ctx);
         
