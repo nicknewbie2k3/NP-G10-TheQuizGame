@@ -404,6 +404,15 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
     auto player = findPlayerByWsi(game, wsi);
     if (!player) return;
     
+    // Stop eliminated players from answering
+    if (player->isEliminated) {
+        json response;
+        response["type"] = "error";
+        response["message"] = "You have been eliminated";
+        sendToClient(wsi, response.dump());
+        return;
+    }
+
     auto now = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - game->turnStartTime).count();
     
