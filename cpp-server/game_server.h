@@ -86,6 +86,10 @@ struct Game {
     // Timing
     std::chrono::steady_clock::time_point turnStartTime;
     int turnTimeRemaining;
+
+    // !!!Testing - Tiebreak
+    bool isTieBreaker = false;
+    std::vector<std::string> tieBreakerIds;
 };
 
 // Server context

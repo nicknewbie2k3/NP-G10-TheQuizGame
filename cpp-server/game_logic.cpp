@@ -311,15 +311,38 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
             // Find lowest scorer
             std::shared_ptr<Player> lowestPlayer = nullptr;
             int lowestScore = INT_MAX;
+            int lowestScoreCount = 0;
+            std::vector<std::shared_ptr<Player>> lowestPlayers;
             
             for (const auto& p : game->activePlayers) {
-                if (!p->isEliminated && p->roundScore < lowestScore) {
-                    lowestScore = p->roundScore;
-                    lowestPlayer = p;
+                // if (!p->isEliminated && p->roundScore < lowestScore) {
+                //     lowestScore = p->roundScore;
+                //     lowestPlayer = p;
+                // }
+
+                if(!p->isEliminated) {
+                    if (p->roundScore < lowestScore) {
+                        lowestScore = p->roundScore;
+                        // reset lowestPlayers then add this player (p)
+                        lowestPlayers.clear();
+                        lowestPlayers.push_back(p);
+                    } else if (p->roundScore == lowestScore) {
+                        // add this player (p) to the list of lowest players
+                        lowestPlayers.push_back(p);
+                    }
                 }
             }
-            
-            if (lowestPlayer) {
+
+            if(lowestPlayers.size() > 1){
+                std::cout << "⚠️ Tie detected! " << lowestPlayers.size() << " players have score " << lowestScore << std::endl;
+
+                game->isTieBreaker = true;
+                game->tieBreakerIds.clear();
+                game->speedResponses.clear();
+                game->turnStartTime = std::chrono::steady_clock::now();
+//              TODO: Handle tie-breaker scenario
+            }else{
+                auto lowestPlayer = lowestPlayers[0];
                 lowestPlayer->isEliminated = true;
                 game->eliminatedPlayers.push_back(lowestPlayer);
                 game->activePlayers.erase(
@@ -335,6 +358,23 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
                 
                 broadcastToGame(game->pin, elimination.dump(), nullptr, ctx);
             }
+            
+            // if (lowestPlayer) {
+            //     lowestPlayer->isEliminated = true;
+            //     game->eliminatedPlayers.push_back(lowestPlayer);
+            //     game->activePlayers.erase(
+            //         std::remove(game->activePlayers.begin(), game->activePlayers.end(), lowestPlayer),
+            //         game->activePlayers.end()
+            //     );
+                
+            //     json elimination;
+            //     elimination["type"] = "player_eliminated";
+            //     elimination["playerId"] = lowestPlayer->id;
+            //     elimination["playerName"] = lowestPlayer->name;
+            //     elimination["reason"] = "Lowest score in Round 1";
+                
+            //     broadcastToGame(game->pin, elimination.dump(), nullptr, ctx);
+            // }
         }
         
         json roundEnd;
@@ -363,7 +403,7 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
 void handleNextRound(struct lws* wsi, ServerContext* ctx) {
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;
-    
+
     if (game->hostWsi != wsi) return;
     
     game->currentRound++;
