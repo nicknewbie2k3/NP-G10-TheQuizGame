@@ -311,7 +311,6 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
             // Find lowest scorer
             std::shared_ptr<Player> lowestPlayer = nullptr;
             int lowestScore = INT_MAX;
-            int lowestScoreCount = 0;
             std::vector<std::shared_ptr<Player>> lowestPlayers;
             
             for (const auto& p : game->activePlayers) {
