@@ -74,6 +74,7 @@ struct Game {
     std::vector<std::string> turnOrder;
     int currentPlayerTurn;
     bool isSpeedPhase;
+    bool isSpeedOrderPhase = false;  // Track if this is a speed_order question
     std::map<std::string, std::pair<std::string, long>> speedResponses;
     std::vector<QuestionPack> questionPacks;
     std::shared_ptr<QuestionPack> currentPack;
@@ -107,6 +108,7 @@ struct ServerContext {
 // Function declarations
 std::string generateGamePin();
 void broadcastToGame(const std::string& gamePin, const std::string& message, struct lws* excludeWsi, ServerContext* ctx);
+void broadcastToActivePlayers(const std::string& gamePin, const std::string& message, struct lws* excludeWsi, ServerContext* ctx);
 void sendToClient(struct lws* wsi, const std::string& message);
 std::shared_ptr<Player> findPlayerByWsi(std::shared_ptr<Game> game, struct lws* wsi);
 std::shared_ptr<Game> findGameByWsi(struct lws* wsi, ServerContext* ctx);
@@ -117,6 +119,8 @@ void handleJoinGame(struct lws* wsi, const std::string& gamePin, const std::stri
 void handleStartGame(struct lws* wsi, ServerContext* ctx);
 void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerContext* ctx);
 void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, ServerContext* ctx);
+void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerContext* ctx);
+void handleContinueToRound2(struct lws* wsi, ServerContext* ctx);
 void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, ServerContext* ctx);
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx);
 void handleNextQuestion(struct lws* wsi, ServerContext* ctx);

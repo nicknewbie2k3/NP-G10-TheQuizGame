@@ -51,6 +51,25 @@ void broadcastToGame(const std::string& gamePin, const std::string& message, str
     }
 }
 
+void broadcastToActivePlayers(const std::string& gamePin, const std::string& message, struct lws* excludeWsi, ServerContext* ctx) {
+    auto it = ctx->games.find(gamePin);
+    if (it == ctx->games.end()) return;
+    
+    auto game = it->second;
+    
+    // Send only to non-eliminated players
+    for (const auto& player : game->players) {
+        if (player->wsi && player->wsi != excludeWsi && !player->isEliminated) {
+            sendToClient(player->wsi, message);
+        }
+    }
+    
+    // Send to host
+    if (game->hostWsi && game->hostWsi != excludeWsi) {
+        sendToClient(game->hostWsi, message);
+    }
+}
+
 std::shared_ptr<Player> findPlayerByWsi(std::shared_ptr<Game> game, struct lws* wsi) {
     for (const auto& player : game->players) {
         if (player->wsi == wsi) {
@@ -335,11 +354,35 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
             if(lowestPlayers.size() > 1){
                 std::cout << "⚠️ Tie detected! " << lowestPlayers.size() << " players have score " << lowestScore << std::endl;
 
+                // Set up tiebreaker round
                 game->isTieBreaker = true;
                 game->tieBreakerIds.clear();
                 game->speedResponses.clear();
+                
+                // Add tied players to tiebreaker list
+                for (const auto& p : lowestPlayers) {
+                    game->tieBreakerIds.push_back(p->id);
+                }
+                
                 game->turnStartTime = std::chrono::steady_clock::now();
-//              TODO: Handle tie-breaker scenario
+                
+                // Notify players of tiebreaker round
+                json tiebreakStart;
+                tiebreakStart["type"] = "tiebreak_start";
+                tiebreakStart["message"] = "Tie Detected! Speed Question Tiebreaker";
+                tiebreakStart["tiedPlayerCount"] = lowestPlayers.size();
+                broadcastToGame(game->pin, tiebreakStart.dump(), nullptr, ctx);
+                
+                // Send speed question to all players
+                if (!ctx->speedQuestions.empty()) {
+                    const auto& sq = ctx->speedQuestions[0];
+                    json speedQ;
+                    speedQ["type"] = "tiebreak_question";
+                    speedQ["question"]["id"] = sq.id;
+                    speedQ["question"]["text"] = sq.text;
+                    broadcastToGame(game->pin, speedQ.dump(), nullptr, ctx);
+                }
+                return; // Exit early - wait for tiebreak answers
             }else{
                 auto lowestPlayer = lowestPlayers[0];
                 lowestPlayer->isEliminated = true;
@@ -423,7 +466,7 @@ void handleNextRound(struct lws* wsi, ServerContext* ctx) {
         
         broadcastToGame(game->pin, round2Start.dump(), nullptr, ctx);
         
-        // Send speed question
+        // Send speed question only to active players
         if (!ctx->speedQuestions.empty()) {
             const auto& sq = ctx->speedQuestions[0];
             json speedQ;
@@ -431,7 +474,7 @@ void handleNextRound(struct lws* wsi, ServerContext* ctx) {
             speedQ["question"]["id"] = sq.id;
             speedQ["question"]["text"] = sq.text;
             
-            broadcastToGame(game->pin, speedQ.dump(), nullptr, ctx);
+            broadcastToActivePlayers(game->pin, speedQ.dump(), nullptr, ctx);
         }
     }
 }
@@ -508,6 +551,9 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
             auto p = findPlayerById(game, playerId);
             if (!p) continue;
             
+            // Skip eliminated players from results
+            if (p->isEliminated) continue;
+            
             const std::string& playerAnswer = respPair.first;
             long responseTime = respPair.second;
             
@@ -582,13 +628,233 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
                 
         //         std::cout << "❌ Player eliminated: " << slowestPlayerName << std::endl;
         //     }
-        // }
-
-        
-        broadcastToGame(game->pin, results.dump(), nullptr, ctx);
+        // }        
+        // Check if this is speed_order phase (don't eliminate anyone, show different message)
+        if (game->isSpeedOrderPhase) {
+            std::cout << "📋 Speed order question complete, announcing player turn order..." << std::endl;
+            
+            // Build turn order from sorted responses
+            json orderAnnouncement;
+            orderAnnouncement["type"] = "player_order";
+            orderAnnouncement["message"] = "Player Turn Order for Round 2";
+            orderAnnouncement["order"] = json::array();
+            
+            int position = 1;
+            for (const auto& [playerId, respPair] : sortedResponses) {
+                auto p = findPlayerById(game, playerId);
+                if (p) {
+                    json playerOrder;
+                    playerOrder["position"] = position;
+                    playerOrder["playerId"] = playerId;
+                    playerOrder["playerName"] = p->name;
+                    playerOrder["responseTime"] = respPair.second / 1000.0;
+                    orderAnnouncement["order"].push_back(playerOrder);
+                    position++;
+                }
+            }
+            
+            broadcastToGame(game->pin, orderAnnouncement.dump(), nullptr, ctx);
+            
+            // Reset for Round 2
+            game->isSpeedOrderPhase = false;
+            game->currentQuestion++;  // Move past speed order question
+            
+            // Announce Round 2 actually starting with question packs
+            json round2Actual;
+            round2Actual["type"] = "round2_questions_start";
+            round2Actual["message"] = "Round 2: Question Packs - Turn-Based Play";
+            broadcastToGame(game->pin, round2Actual.dump(), nullptr, ctx);
+        } else {
+            // Normal speed question - send results with elimination
+            broadcastToGame(game->pin, results.dump(), nullptr, ctx);
+        }
         
         // Clear speed responses for next round
         game->speedResponses.clear();
+    }
+}
+
+void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    auto player = findPlayerByWsi(game, wsi);
+    if (!player) return;
+    
+    // Only tiebreak participants should answer
+    auto isTiebreakParticipant = std::find(game->tieBreakerIds.begin(), game->tieBreakerIds.end(), player->id) != game->tieBreakerIds.end();
+    if (!isTiebreakParticipant) {
+        json response;
+        response["type"] = "error";
+        response["message"] = "You are not part of the tiebreaker";
+        sendToClient(wsi, response.dump());
+        return;
+    }
+
+    auto now = std::chrono::steady_clock::now();
+    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - game->turnStartTime).count();
+    
+    game->speedResponses[player->id] = {answer, elapsed};
+    
+    json response;
+    response["type"] = "tiebreak_answer_received";
+    sendToClient(wsi, response.dump());
+    
+    std::cout << "📝 Tiebreak answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
+    
+    // Check if all tiebreaker participants have answered
+    if (game->speedResponses.size() >= game->tieBreakerIds.size()) {
+        std::cout << "✅ All tiebreak participants answered, determining winner..." << std::endl;
+        
+        // Get the correct answer
+        std::string correctAnswer = "";
+        if (!ctx->speedQuestions.empty()) {
+            correctAnswer = ctx->speedQuestions[0].correctAnswer;
+        }
+        
+        // Build results array sorted by response time
+        std::vector<std::pair<std::string, std::pair<std::string, long>>> sortedResponses(
+            game->speedResponses.begin(), 
+            game->speedResponses.end()
+        );
+        
+        std::sort(sortedResponses.begin(), sortedResponses.end(),
+            [](const auto& a, const auto& b) {
+                return a.second.second < b.second.second; // Sort by response time
+            });
+        
+        json tiebreakResults;
+        tiebreakResults["type"] = "tiebreak_results";
+        tiebreakResults["results"] = json::array();
+        
+        // List of incorrect players
+        std::vector<std::string> incorrectPlayers;
+        std::string eliminatedId;
+        std::string eliminatedName;
+        
+        for (const auto& [playerId, respPair] : sortedResponses) {
+            auto p = findPlayerById(game, playerId);
+            if (!p) continue;
+            
+            const std::string& playerAnswer = respPair.first;
+            long responseTime = respPair.second;
+            
+            // Check if answer is correct (case-insensitive)
+            std::string lowerAnswer = playerAnswer;
+            std::transform(lowerAnswer.begin(), lowerAnswer.end(), lowerAnswer.begin(), ::tolower);
+            std::string lowerCorrect = correctAnswer;
+            std::transform(lowerCorrect.begin(), lowerCorrect.end(), lowerCorrect.begin(), ::tolower);
+            
+            bool isCorrect = (lowerAnswer == lowerCorrect);
+            
+            json playerResult;
+            playerResult["playerId"] = playerId;
+            playerResult["playerName"] = p->name;
+            playerResult["answer"] = playerAnswer;
+            playerResult["responseTime"] = responseTime / 1000.0; // Convert to seconds
+            playerResult["correct"] = isCorrect;
+            
+            tiebreakResults["results"].push_back(playerResult);
+            
+            // Collect incorrect players
+            if (!isCorrect) {
+                incorrectPlayers.push_back(playerId);
+            }
+        }
+        
+        // If no incorrect players, eliminate the slowest
+        if (incorrectPlayers.empty()) {
+            if (!sortedResponses.empty()) {
+                eliminatedId = sortedResponses.back().first;
+            }
+        }
+        // Else eliminate the slowest incorrect player
+        else {
+            eliminatedId = incorrectPlayers.back();
+        }
+        
+        // Take eliminated player's name
+        if (!eliminatedId.empty()) {
+            auto p = findPlayerById(game, eliminatedId);
+            if (p) eliminatedName = p->name;
+        }
+        
+        // Eliminate that player
+        if (!eliminatedId.empty()) {
+            auto eliminatedPlayer = findPlayerById(game, eliminatedId);
+            if (eliminatedPlayer) {
+                eliminatedPlayer->isEliminated = true;
+                game->eliminatedPlayers.push_back(eliminatedPlayer);
+                game->activePlayers.erase(
+                    std::remove(game->activePlayers.begin(), game->activePlayers.end(), eliminatedPlayer),
+                    game->activePlayers.end()
+                );
+                
+                tiebreakResults["eliminated"]["playerId"] = eliminatedId;
+                tiebreakResults["eliminated"]["playerName"] = eliminatedName;
+                
+                std::cout << "❌ Tiebreak eliminated: " << eliminatedName << std::endl;
+            }
+        }
+        
+        broadcastToGame(game->pin, tiebreakResults.dump(), nullptr, ctx);
+        
+        // Clear tiebreak state
+        game->isTieBreaker = false;
+        game->tieBreakerIds.clear();
+        game->speedResponses.clear();
+        
+        // Send round_complete after tiebreaker (same as non-tiebreaker path)
+        json roundEnd;
+        roundEnd["type"] = "round_complete";
+        roundEnd["round"] = game->currentRound;
+        broadcastToGame(game->pin, roundEnd.dump(), nullptr, ctx);
+        
+        // Don't auto-transition - wait for host to continue
+        std::cout << "✅ Tiebreak complete. Waiting for host to continue to Round 2..." << std::endl;
+    }
+}
+
+void handleContinueToRound2(struct lws* wsi, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    // Only host can continue
+    if (game->hostWsi != wsi) return;
+    
+    std::cout << "📋 Host starting Round 2 with speed order question..." << std::endl;
+    
+    game->currentRound = 2;
+    game->currentQuestion = 0;
+    game->questionsPerRound = 1; // Only speed order question
+    game->isSpeedOrderPhase = true;  // Mark this as speed order phase
+    
+    // Reset player states for Round 2
+    for (auto& p : game->activePlayers) {
+        p->hasAnswered = false;
+        p->roundScore = 0;
+    }
+    
+    game->answers.clear();
+    game->speedResponses.clear();
+    game->turnStartTime = std::chrono::steady_clock::now();
+    
+    // Announce Round 2 start
+    json round2Start;
+    round2Start["type"] = "round2_start";
+    round2Start["message"] = "Round 2: Determine Player Order";
+    round2Start["phase"] = "speed_order";
+    broadcastToGame(game->pin, round2Start.dump(), nullptr, ctx);
+    
+    // Send speed order question only to active players
+    if (!ctx->speedQuestions.empty()) {
+        const auto& sq = ctx->speedQuestions[0];
+        json speedQ;
+        speedQ["type"] = "speed_question";
+        speedQ["question"]["id"] = sq.id;
+        speedQ["question"]["text"] = sq.text;
+        speedQ["phase"] = "speed_order";
+        broadcastToActivePlayers(game->pin, speedQ.dump(), nullptr, ctx);
     }
 }
 
