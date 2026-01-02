@@ -49,6 +49,12 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                 else if (type == "submit_speed_answer") {
                     handleSpeedAnswer(wsi, msg["questionId"], msg["answer"], ctx);
                 }
+                else if (type == "submit_tiebreak_answer") {
+                    handleTiebreakAnswer(wsi, msg["answer"], ctx);
+                }
+                else if (type == "continue_to_round2") {
+                    handleContinueToRound2(wsi, ctx);
+                }
                 else if (type == "select_question_pack") {
                     handleQuestionPackSelection(wsi, msg["packId"], ctx);
                 }

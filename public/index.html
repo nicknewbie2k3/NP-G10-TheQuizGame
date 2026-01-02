@@ -194,6 +194,89 @@
                 </div>
             </div>
             
+            <!-- Tiebreak Notice Screen -->
+            <div id="tiebreak-notice-screen" class="screen">
+                <div class="question-container">
+                    <div class="question-header">
+                        <div class="round-info">
+                            ⚡ Tiebreaker Alert
+                        </div>
+                    </div>
+                    <div id="tiebreak-notice-content">
+                        <!-- Tiebreak notice will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tiebreak Question Screen -->
+            <div id="tiebreak-question-screen" class="screen">
+                <div class="question-container">
+                    <div class="question-header">
+                        <div class="round-info">
+                            Tiebreaker - Speed Question ⚡
+                        </div>
+                        <div class="speed-info">No Time Limit - Answer to advance!</div>
+                    </div>
+                    
+                    <div class="question-text" id="tiebreak-question-text">
+                        Loading question...
+                    </div>
+                    
+                    <form id="tiebreak-answer-form">
+                        <div class="form-group">
+                            <input type="text" id="tiebreak-answer-input" class="input-text" 
+                                   placeholder="Type your answer..." autocomplete="off" required>
+                        </div>
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary btn-large">
+                                Submit Answer ⚡
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="tiebreak-waiting" class="waiting-message" style="display: none;">
+                        <p>Answer submitted! Waiting for other players...</p>
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tiebreak Results Screen -->
+            <div id="tiebreak-results-screen" class="screen">
+                <div class="results-container">
+                    <h2>⚡ Tiebreaker Results</h2>
+                    <div id="tiebreak-results-content">
+                        <!-- Tiebreak results will be inserted here -->
+                    </div>
+                    <div class="button-group" id="tiebreak-host-controls" style="display: none;">
+                        <button class="btn btn-primary btn-large" onclick="continueToRound2()">
+                            Continue to Round 2 →
+                        </button>
+                    </div>
+                    <div class="waiting-message" id="tiebreak-waiting" style="display: none;">
+                        <p>Waiting for host to continue...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Player Order Announcement Screen -->
+            <div id="player-order-screen" class="screen">
+                <div class="results-container">
+                    <div id="player-order-content">
+                        <!-- Player order will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Round 2 Questions Start Screen -->
+            <div id="round2-questions-start-screen" class="screen">
+                <div class="question-container">
+                    <div id="round2-actual-start">
+                        <!-- Round 2 start message will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            
             <!-- Eliminated Screen -->
             <div id="eliminated-screen" class="screen">
                 <div class="eliminated-container">

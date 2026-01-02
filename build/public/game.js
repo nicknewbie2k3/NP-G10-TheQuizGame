@@ -87,6 +87,24 @@ function handleMessage(message) {
         case 'speed_results':
             handleSpeedResults(message);
             break;
+        case 'tiebreak_start':
+            handleTiebreakStart(message);
+            break;
+        case 'tiebreak_question':
+            handleTiebreakQuestion(message);
+            break;
+        case 'tiebreak_answer_received':
+            handleTiebreakAnswerReceived(message);
+            break;
+        case 'tiebreak_results':
+            handleTiebreakResults(message);
+            break;
+        case 'player_order':
+            handlePlayerOrder(message);
+            break;
+        case 'round2_questions_start':
+            handleRound2QuestionsStart(message);
+            break;
         case 'game_ended':
             handleGameEnded(message);
             break;
@@ -185,6 +203,24 @@ function submitSpeedAnswer(event) {
     });
     
     console.log('Speed answer submitted:', answer);
+}
+
+function submitTiebreakAnswer(event) {
+    event.preventDefault();
+    
+    const answer = document.getElementById('tiebreak-answer-input').value.trim();
+    
+    if (!answer) {
+        showError('Please enter an answer');
+        return;
+    }
+    
+    sendMessage({
+        type: 'submit_tiebreak_answer',
+        answer: answer
+    });
+    
+    console.log('Tiebreak answer submitted:', answer);
 }
 
 // Next question (host only)
@@ -403,6 +439,130 @@ function handleSpeedResults(message) {
     showScreen('speed-results-screen');
 }
 
+// Handle tiebreak start
+function handleTiebreakStart(message) {
+    const content = document.getElementById('tiebreak-notice-content');
+    html = `<div class="tiebreak-alert">
+        <h3>⚡ Tiebreaker Detected!</h3>
+        <p>${message.tiedPlayerCount} players tied with the same score.</p>
+        <p>A speed question will determine who advances...</p>
+        <div class="spinner"></div>
+    </div>`;
+    content.innerHTML = html;
+    showScreen('tiebreak-notice-screen');
+}
+
+// Handle tiebreak question
+function handleTiebreakQuestion(message) {
+    const question = message.question;
+    currentQuestion = question;
+    
+    document.getElementById('tiebreak-question-text').textContent = question.text;
+    document.getElementById('tiebreak-answer-input').value = '';
+    document.getElementById('tiebreak-answer-input').focus();
+    document.getElementById('tiebreak-waiting').style.display = 'none';
+    
+    showScreen('tiebreak-question-screen');
+}
+
+// Handle tiebreak answer received
+function handleTiebreakAnswerReceived(message) {
+    document.getElementById('tiebreak-waiting').style.display = 'block';
+    document.getElementById('tiebreak-answer-form').style.display = 'none';
+}
+
+// Handle tiebreak results
+function handleTiebreakResults(message) {
+    const results = message.results;
+    const content = document.getElementById('tiebreak-results-content');
+    
+    let html = '<div class="leaderboard">';
+    html += '<h3>Tiebreaker Results (Fastest First):</h3>';
+    html += '<ol class="tiebreak-results-list">';
+    
+    results.forEach((result, index) => {
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        const correct = result.correct ? '✅' : '❌';
+        html += `
+            <li class="tiebreak-result-item ${result.correct ? 'correct' : 'incorrect'}">
+                <span class="medal">${medal}</span>
+                <span class="player-name">${result.playerName}</span>
+                <span class="answer">${result.answer}</span>
+                <span class="status">${correct}</span>
+                <span class="time">${result.responseTime.toFixed(2)}s</span>
+            </li>
+        `;
+    });
+    
+    html += '</ol></div>';
+    
+    if (message.eliminated) {
+        html += `<div class="elimination-notice">
+            <p>⚠️ <strong>${message.eliminated.playerName}</strong> has been eliminated!</p>
+        </div>`;
+    }
+    
+    content.innerHTML = html;
+    
+    // Show host controls if host, otherwise show waiting
+    if (isHost) {
+        document.getElementById('tiebreak-host-controls').style.display = 'block';
+        document.getElementById('tiebreak-waiting').style.display = 'none';
+    } else {
+        document.getElementById('tiebreak-host-controls').style.display = 'none';
+        document.getElementById('tiebreak-waiting').style.display = 'block';
+    }
+    
+    showScreen('tiebreak-results-screen');
+}
+
+function continueToRound2() {
+    sendMessage({
+        type: 'continue_to_round2'
+    });
+    console.log('Host continuing to Round 2...');
+}
+
+// Handle player order announcement
+function handlePlayerOrder(message) {
+    const content = document.getElementById('player-order-content');
+    
+    let html = '<div class="order-announcement">';
+    html += '<h3>📋 ' + message.message + '</h3>';
+    html += '<ol class="player-order-list">';
+    
+    message.order.forEach((player) => {
+        const medal = player.position === 1 ? '🥇' : player.position === 2 ? '🥈' : '🥉';
+        html += `
+            <li class="order-item">
+                <span class="medal">${medal}</span>
+                <span class="position">#${player.position}</span>
+                <span class="player-name">${player.playerName}</span>
+                <span class="time">${player.responseTime.toFixed(2)}s</span>
+            </li>
+        `;
+    });
+    
+    html += '</ol>';
+    html += '<p class="order-subtitle">This is your turn order for Round 2</p>';
+    html += '</div>';
+    
+    content.innerHTML = html;
+    showScreen('player-order-screen');
+}
+
+// Handle Round 2 questions start
+function handleRound2QuestionsStart(message) {
+    const content = document.getElementById('round2-actual-start');
+    html = `<div class="round-transition">
+        <h2>📚 ${message.message}</h2>
+        <p>Ready to answer question packs?</p>
+        <div class="spinner"></div>
+    </div>`;
+    content.innerHTML = html;
+    showScreen('round2-questions-start-screen');
+}
+
 // Handle game ended
 function handleGameEnded(message) {
     showScreen('game-over');
@@ -531,6 +691,8 @@ window.addEventListener('DOMContentLoaded', () => {
                 startGame();
             } else if (onclickAttr.includes('endGame')) {
                 endGame();
+            } else if (onclickAttr.includes('continueToRound2')) {
+                continueToRound2();
             } else if (onclickAttr.includes('nextRound')) {
                 // Check nextRound BEFORE nextQuestion to avoid conflict
                 nextRound();
@@ -554,6 +716,12 @@ window.addEventListener('DOMContentLoaded', () => {
         if (form.id === 'speed-answer-form') {
             e.preventDefault();
             submitSpeedAnswer(e);
+        }
+        
+        // Handle tiebreak answer form
+        if (form.id === 'tiebreak-answer-form') {
+            e.preventDefault();
+            submitTiebreakAnswer(e);
         }
     });
 });
