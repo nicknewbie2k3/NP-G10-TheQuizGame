@@ -526,6 +526,11 @@ function handleTiebreakResults(message) {
         html += `<div class="elimination-notice">
             <p>⚠️ <strong>${message.eliminated.playerName}</strong> has been eliminated!</p>
         </div>`;
+        
+        // Mark current player as eliminated if they lost the tiebreaker
+        if (message.eliminated.playerId === playerId) {
+            playerEliminated = true;
+        }
     }
     
     content.innerHTML = html;
