@@ -428,19 +428,35 @@ function handleSpeedResults(message) {
     const content = document.getElementById('speed-results-content');
     
     let html = '<div class="leaderboard">';
-    html += '<h3>Answer Order (Fastest First):</h3>';
+    html += '<h3>⚡ Speed Question Results</h3>';
+    html += '<div class="speed-results-header">';
+    html += '<p>Players ranked by answer speed (fastest first)</p>';
+    html += '</div>';
     html += '<ol class="speed-results-list">';
     
     results.forEach((result, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
         const correct = result.correct ? '✅' : '❌';
         html += `
             <li class="speed-result-item ${result.correct ? 'correct' : 'incorrect'}">
-                <span class="medal">${medal}</span>
-                <span class="player-name">${result.playerName}</span>
-                <span class="answer">${result.answer}</span>
-                <span class="status">${correct}</span>
-                <span class="time">${result.responseTime.toFixed(2)}s</span>
+                <div class="result-position">
+                    <span class="medal">${medal}</span>
+                </div>
+                <div class="result-player">
+                    <span class="player-name">${result.playerName}</span>
+                </div>
+                <div class="result-answer">
+                    <span class="answer-label">Answer:</span>
+                    <span class="answer-value">${result.answer}</span>
+                </div>
+                <div class="result-status">
+                    <span class="status-icon">${correct}</span>
+                    <span class="status-text">${result.correct ? 'Correct' : 'Incorrect'}</span>
+                </div>
+                <div class="result-time">
+                    <span class="time-icon">⏱️</span>
+                    <span class="time-value">${result.responseTime.toFixed(2)}s</span>
+                </div>
             </li>
         `;
     });
@@ -449,7 +465,7 @@ function handleSpeedResults(message) {
     
     if (message.eliminated) {
         html += `<div class="elimination-notice">
-            <p>⚠️ <strong>${message.eliminated.playerName}</strong> was eliminated (slowest/incorrect)</p>
+            <p>⚠️ <strong>${message.eliminated.playerName}</strong> was eliminated</p>
         </div>`;
     }
     
@@ -457,9 +473,11 @@ function handleSpeedResults(message) {
     
     // Show host controls if host
     if (isHost) {
-        document.getElementById('speed-host-controls').style.display = 'none';
-    } else {
         document.getElementById('speed-host-controls').style.display = 'block';
+        document.getElementById('speed-waiting').style.display = 'none';
+    } else {
+        document.getElementById('speed-host-controls').style.display = 'none';
+        document.getElementById('speed-waiting').style.display = 'block';
     }
     
     showScreen('speed-results-screen');
@@ -504,13 +522,13 @@ function handleTiebreakResults(message) {
     
     let html = '<div class="leaderboard">';
     html += '<h3>Tiebreaker Results (Fastest First):</h3>';
-    html += '<ol class="speed-results-list">';
+    html += '<ol class="tiebreak-results-list">';
     
     results.forEach((result, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
         const correct = result.correct ? '✅' : '❌';
         html += `
-            <li class="speed-result-item ${result.correct ? 'correct' : 'incorrect'}">
+            <li class="tiebreak-result-item ${result.correct ? 'correct' : 'incorrect'}">
                 <span class="medal">${medal}</span>
                 <span class="player-name">${result.playerName}</span>
                 <span class="answer">${result.answer}</span>
@@ -537,7 +555,7 @@ function handleTiebreakResults(message) {
     
     // Show host controls if host, otherwise show waiting
     if (isHost) {
-        document.getElementById('tiebreak-host-controls').style.display = 'flex';
+        document.getElementById('tiebreak-host-controls').style.display = 'block';
         document.getElementById('tiebreak-waiting').style.display = 'none';
     } else {
         document.getElementById('tiebreak-host-controls').style.display = 'none';
@@ -549,9 +567,9 @@ function handleTiebreakResults(message) {
 
 function continueToRound2() {
     sendMessage({
-        type: 'continue_to_round2'
+        type: 'continue_from_speed_order'
     });
-    console.log('Host continuing to Round 2...');
+    console.log('Host continuing from speed order to Round 2...');
 }
 
 // Handle player order announcement
