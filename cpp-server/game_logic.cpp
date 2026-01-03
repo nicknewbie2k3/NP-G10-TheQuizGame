@@ -442,6 +442,43 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
     broadcastToGame(game->pin, questionMsg.dump(), nullptr, ctx);
 }
 
+void handleNextRound(struct lws* wsi, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+
+    if (game->hostWsi != wsi) return;
+    
+    game->currentRound++;
+    game->currentQuestion = 0;
+    game->isSpeedPhase = true;
+    
+    // Reset round scores
+    for (auto& p : game->players) {
+        p->roundScore = 0;
+    }
+    
+    if (game->currentRound == 2) {
+        // Start Round 2 - Speed Question Phase
+        json round2Start;
+        round2Start["type"] = "round2_start";
+        round2Start["message"] = "Round 2: Turn-Based Questions";
+        round2Start["phase"] = "speed";
+        
+        broadcastToGame(game->pin, round2Start.dump(), nullptr, ctx);
+        
+        // Send speed question
+        if (!ctx->speedQuestions.empty()) {
+            const auto& sq = ctx->speedQuestions[0];
+            json speedQ;
+            speedQ["type"] = "speed_question";
+            speedQ["question"]["id"] = sq.id;
+            speedQ["question"]["text"] = sq.text;
+            
+            broadcastToGame(game->pin, speedQ.dump(), nullptr, ctx);
+        }
+    }
+}
+
 void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, ServerContext* ctx) {
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;

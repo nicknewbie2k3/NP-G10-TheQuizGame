@@ -33,5 +33,75 @@
         "options": ["Atlantic", "Indian", "Arctic", "Pacific"],
         "correctAnswer": 3,
         "timeLimit": 15
+    },
+    {
+        "id": 6,
+        "text": "In what year did World War II end?",
+        "options": ["1943", "1944", "1945", "1946"],
+        "correctAnswer": 2,
+        "timeLimit": 15
+    },
+    {
+        "id": 7,
+        "text": "What is the chemical symbol for gold?",
+        "options": ["Go", "Gd", "Au", "Ag"],
+        "correctAnswer": 2,
+        "timeLimit": 12
+    },
+    {
+        "id": 8,
+        "text": "Which country is home to the Great Barrier Reef?",
+        "options": ["Indonesia", "Philippines", "Australia", "Fiji"],
+        "correctAnswer": 2,
+        "timeLimit": 15
+    },
+    {
+        "id": 9,
+        "text": "What is the smallest prime number?",
+        "options": ["0", "1", "2", "3"],
+        "correctAnswer": 2,
+        "timeLimit": 10
+    },
+    {
+        "id": 10,
+        "text": "How many sides does a hexagon have?",
+        "options": ["4", "5", "6", "7"],
+        "correctAnswer": 2,
+        "timeLimit": 8
+    },
+    {
+        "id": 11,
+        "text": "What is the capital of Japan?",
+        "options": ["Osaka", "Tokyo", "Kyoto", "Yokohama"],
+        "correctAnswer": 1,
+        "timeLimit": 15
+    },
+    {
+        "id": 12,
+        "text": "Which element has atomic number 1?",
+        "options": ["Helium", "Hydrogen", "Lithium", "Boron"],
+        "correctAnswer": 1,
+        "timeLimit": 12
+    },
+    {
+        "id": 13,
+        "text": "What is the freezing point of water in Celsius?",
+        "options": ["−10°C", "0°C", "10°C", "100°C"],
+        "correctAnswer": 1,
+        "timeLimit": 10
+    },
+    {
+        "id": 14,
+        "text": "Who wrote Romeo and Juliet?",
+        "options": ["Jane Austen", "William Shakespeare", "Charles Dickens", "Mark Twain"],
+        "correctAnswer": 1,
+        "timeLimit": 15
+    },
+    {
+        "id": 15,
+        "text": "What is the tallest mountain in the world?",
+        "options": ["K2", "Mount Everest", "Kilimanjaro", "Denali"],
+        "correctAnswer": 1,
+        "timeLimit": 15
     }
 ]
