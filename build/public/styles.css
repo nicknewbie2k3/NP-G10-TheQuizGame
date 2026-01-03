@@ -573,6 +573,199 @@ body {
     color: #856404;
 }
 
+/* Round 2 Turn-Based Play Styles */
+.round2-container {
+    background: white;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.round2-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.round2-header h2 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 2rem;
+}
+
+.turn-indicator {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.turn-indicator .turn-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.player-turn-order {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+}
+
+.player-turn-order h3 {
+    color: #667eea;
+    margin-top: 0;
+}
+
+.turn-order-list {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.turn-order-item {
+    background: white;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 2px solid #ddd;
+    font-weight: 600;
+    color: #333;
+}
+
+.turn-order-item.current {
+    border-color: #667eea;
+    background: #e7f0ff;
+    color: #667eea;
+}
+
+.turn-number {
+    color: #6c757d;
+    margin-right: 5px;
+}
+
+.packs-grid {
+    margin-top: 30px;
+}
+
+.packs-grid h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.packs-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.pack-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.pack-card:hover:not(.selected) {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-color: #667eea;
+}
+
+.pack-card.selectable {
+    cursor: pointer;
+    background: linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%);
+    border-color: #667eea;
+}
+
+.pack-card.selectable:hover {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e7ebff 100%);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.pack-card.selected {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border-color: #28a745;
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.2);
+}
+
+.pack-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.pack-description {
+    font-size: 0.95rem;
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.pack-questions {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 15px;
+}
+
+.pack-card .btn {
+    width: 100%;
+    padding: 10px 15px;
+}
+
+.selected-badge {
+    display: inline-block;
+    background: #28a745;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .round2-container {
+        padding: 20px;
+    }
+    
+    .turn-indicator .turn-text {
+        font-size: 1.2rem;
+    }
+    
+    .packs-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .turn-order-list {
+        flex-direction: column;
+    }
+    
+    .turn-order-item {
+        width: 100%;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .app-header h1 {

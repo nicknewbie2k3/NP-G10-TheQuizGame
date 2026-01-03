@@ -799,11 +799,40 @@ void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
     
     std::cout << "📋 Continuing from speed order to Round 2 question packs..." << std::endl;
     
-    // Send round 2 questions start message
-    json round2Actual;
-    round2Actual["type"] = "round2_questions_start";
-    round2Actual["message"] = "Round 2: Question Packs - Turn-Based Play";
-    broadcastToGame(game->pin, round2Actual.dump(), nullptr, ctx);
+    // First, create player order message based on active players (they should already be in order from speed round)
+    json playerOrderMsg;
+    playerOrderMsg["type"] = "round2_player_order";
+    playerOrderMsg["playerOrder"] = json::array();
+    
+    int position = 1;
+    for (const auto& player : game->activePlayers) {
+        if (!player->isEliminated) {
+            json playerInfo;
+            playerInfo["position"] = position;
+            playerInfo["playerId"] = player->id;
+            playerInfo["playerName"] = player->name;
+            playerOrderMsg["playerOrder"].push_back(playerInfo);
+            position++;
+        }
+    }
+    
+    broadcastToGame(game->pin, playerOrderMsg.dump(), nullptr, ctx);
+    
+    // Now send question packs
+    json packsMsg;
+    packsMsg["type"] = "round2_packs_available";
+    packsMsg["packs"] = json::array();
+    
+    for (const auto& pack : ctx->questionPacks) {
+        json packInfo;
+        packInfo["id"] = pack.id;
+        packInfo["title"] = pack.title;
+        packInfo["description"] = pack.description;
+        packInfo["questionCount"] = pack.questions.size();
+        packsMsg["packs"].push_back(packInfo);
+    }
+    
+    broadcastToGame(game->pin, packsMsg.dump(), nullptr, ctx);
 }
 
 void handleContinueToRound2(struct lws* wsi, ServerContext* ctx) {

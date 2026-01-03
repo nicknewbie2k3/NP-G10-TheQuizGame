@@ -103,8 +103,11 @@ function handleMessage(message) {
         case 'player_order':
             handlePlayerOrder(message);
             break;
-        case 'round2_questions_start':
-            handleRound2QuestionsStart(message);
+        case 'round2_player_order':
+            handleRound2PlayerOrder(message);
+            break;
+        case 'round2_packs_available':
+            handleRound2PacksAvailable(message);
             break;
         case 'game_ended':
             handleGameEnded(message);
@@ -605,11 +608,91 @@ function handleRound2QuestionsStart(message) {
     const content = document.getElementById('round2-actual-start');
     html = `<div class="round-transition">
         <h2>📚 ${message.message}</h2>
-        <p>Ready to answer question packs?</p>
+        <p>Loading question packs...</p>
         <div class="spinner"></div>
     </div>`;
     content.innerHTML = html;
     showScreen('round2-questions-start-screen');
+}
+
+// Global variable to track turn-based play state
+let round2PlayerOrder = [];
+let round2CurrentTurnIndex = 0;
+let round2SelectedPacks = new Set();
+
+// Handle player order for Round 2
+function handleRound2PlayerOrder(message) {
+    console.log('Received Round 2 player order:', message);
+    round2PlayerOrder = message.playerOrder || [];
+    round2CurrentTurnIndex = 0;
+}
+
+// Handle question packs available
+function handleRound2PacksAvailable(message) {
+    console.log('Received Round 2 question packs:', message);
+    
+    const content = document.getElementById('round2-packs-content');
+    
+    // Show current player's turn
+    const currentPlayer = round2PlayerOrder[round2CurrentTurnIndex];
+    let html = '<div class="round2-header">';
+    html += `<h2>📚 Round 2: Question Packs - Turn-Based Play</h2>`;
+    html += `<div class="turn-indicator">`;
+    if (currentPlayer) {
+        const isYourTurn = currentPlayer.playerId === playerId;
+        html += `<p class="turn-text">🎯 ${isYourTurn ? 'YOUR TURN' : "It's " + currentPlayer.playerName + "'s turn"}</p>`;
+    }
+    html += `</div>`;
+    html += '</div>';
+    
+    // Show player turn order
+    html += '<div class="player-turn-order">';
+    html += '<h3>Turn Order:</h3>';
+    html += '<ol class="turn-order-list">';
+    round2PlayerOrder.forEach((p, idx) => {
+        const isCurrent = idx === round2CurrentTurnIndex;
+        html += `<li class="turn-order-item ${isCurrent ? 'current' : ''}">`;
+        if (isCurrent) html += '👉 ';
+        html += `<span class="turn-number">#${idx + 1}</span> ${p.playerName}`;
+        html += `</li>`;
+    });
+    html += '</ol>';
+    html += '</div>';
+    
+    // Show question packs
+    html += '<div class="packs-grid">';
+    html += '<h3>Available Question Packs:</h3>';
+    html += '<div class="packs-container">';
+    
+    (message.packs || []).forEach((pack) => {
+        const isSelected = round2SelectedPacks.has(pack.id);
+        html += `
+            <div class="pack-card ${isSelected ? 'selected' : ''} ${currentPlayer && currentPlayer.playerId === playerId && !isSelected ? 'selectable' : ''}">
+                <div class="pack-title">${pack.title}</div>
+                <div class="pack-description">${pack.description}</div>
+                <div class="pack-questions">📝 ${pack.questionCount} questions</div>
+                ${!isSelected && currentPlayer && currentPlayer.playerId === playerId ? 
+                    `<button class="btn btn-secondary" onclick="selectQuestionPack('${pack.id}')">Select</button>` : 
+                    ''}
+                ${isSelected ? '<div class="selected-badge">✅ Selected</div>' : ''}
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    html += '</div>';
+    
+    content.innerHTML = html;
+    showScreen('round2-turnbased-screen');
+}
+
+// Handle question pack selection
+function selectQuestionPack(packId) {
+    sendMessage({
+        type: 'select_question_pack',
+        packId: packId
+    });
+    console.log('Selected question pack:', packId);
 }
 
 // Handle game ended
