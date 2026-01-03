@@ -6,6 +6,7 @@ let playerId = null;
 let playerName = null;
 let currentQuestion = null;
 let players = [];
+let playerEliminated = false;
 
 // Connect to WebSocket server
 function connectWebSocket() {
@@ -189,6 +190,12 @@ function submitAnswer(questionId, answer) {
 function submitSpeedAnswer(event) {
     event.preventDefault();
     
+    // Prevent eliminated players from submitting answers
+    if (playerEliminated) {
+        showError('You have been eliminated and cannot answer');
+        return;
+    }
+    
     const answer = document.getElementById('speed-answer-input').value.trim();
     
     if (!answer) {
@@ -365,6 +372,7 @@ function handleRoundComplete(message) {
 // Handle player eliminated
 function handlePlayerEliminated(message) {
     if (message.playerId === playerId) {
+        playerEliminated = true;
         showScreen('eliminated-screen');
     } else {
         showNotification(`${message.playerName} has been eliminated!`);
@@ -374,11 +382,22 @@ function handlePlayerEliminated(message) {
 // Handle Round 2 start
 function handleRound2Start(message) {
     console.log('Round 2 starting - Speed Question Phase!');
-    // Just wait for speed_question message
+    // Eliminated players should stay on eliminated screen
+    if (playerEliminated) {
+        console.log('Player is eliminated, staying on eliminated screen');
+        return;
+    }
+    // Wait for speed_question message for active players
 }
 
 // Handle speed question
 function handleSpeedQuestion(message) {
+    // Don't show speed question to eliminated players
+    if (playerEliminated) {
+        console.log('Player is eliminated, not showing speed question');
+        return;
+    }
+    
     const question = message.question;
     currentQuestion = question;
     
@@ -398,7 +417,14 @@ function handleSpeedAnswerReceived(message) {
 
 // Handle speed results
 function handleSpeedResults(message) {
+    console.log('Received speed results:', message);
+    
     const results = message.results;
+    if (!results || !Array.isArray(results)) {
+        console.error('Invalid results format:', message);
+        return;
+    }
+    
     const content = document.getElementById('speed-results-content');
     
     let html = '<div class="leaderboard">';
@@ -500,6 +526,11 @@ function handleTiebreakResults(message) {
         html += `<div class="elimination-notice">
             <p>⚠️ <strong>${message.eliminated.playerName}</strong> has been eliminated!</p>
         </div>`;
+        
+        // Mark current player as eliminated if they lost the tiebreaker
+        if (message.eliminated.playerId === playerId) {
+            playerEliminated = true;
+        }
     }
     
     content.innerHTML = html;
