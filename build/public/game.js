@@ -537,7 +537,7 @@ function handleTiebreakResults(message) {
     
     // Show host controls if host, otherwise show waiting
     if (isHost) {
-        document.getElementById('tiebreak-host-controls').style.display = 'block';
+        document.getElementById('tiebreak-host-controls').style.display = 'flex';
         document.getElementById('tiebreak-waiting').style.display = 'none';
     } else {
         document.getElementById('tiebreak-host-controls').style.display = 'none';
