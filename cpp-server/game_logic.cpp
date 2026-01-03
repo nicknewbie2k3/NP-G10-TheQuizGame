@@ -805,10 +805,10 @@ void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerCont
         game->speedResponses.clear();
         
         // Send round_complete after tiebreaker (same as non-tiebreaker path)
-        json roundEnd;
-        roundEnd["type"] = "round_complete";
-        roundEnd["round"] = game->currentRound;
-        broadcastToGame(game->pin, roundEnd.dump(), nullptr, ctx);
+        // json roundEnd;
+        // roundEnd["type"] = "round_complete";
+        // roundEnd["round"] = game->currentRound;
+        // broadcastToGame(game->pin, roundEnd.dump(), nullptr, ctx);
         
         // Don't auto-transition - wait for host to continue
         std::cout << "✅ Tiebreak complete. Waiting for host to continue to Round 2..." << std::endl;
