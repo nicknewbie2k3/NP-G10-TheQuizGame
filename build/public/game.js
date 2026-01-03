@@ -504,13 +504,13 @@ function handleTiebreakResults(message) {
     
     let html = '<div class="leaderboard">';
     html += '<h3>Tiebreaker Results (Fastest First):</h3>';
-    html += '<ol class="tiebreak-results-list">';
+    html += '<ol class="speed-results-list">';
     
     results.forEach((result, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
         const correct = result.correct ? '✅' : '❌';
         html += `
-            <li class="tiebreak-result-item ${result.correct ? 'correct' : 'incorrect'}">
+            <li class="speed-result-item ${result.correct ? 'correct' : 'incorrect'}">
                 <span class="medal">${medal}</span>
                 <span class="player-name">${result.playerName}</span>
                 <span class="answer">${result.answer}</span>
