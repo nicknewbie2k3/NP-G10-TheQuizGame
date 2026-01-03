@@ -631,39 +631,14 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         // }        
         // Check if this is speed_order phase (don't eliminate anyone, show different message)
         if (game->isSpeedOrderPhase) {
-            std::cout << "📋 Speed order question complete, announcing player turn order..." << std::endl;
+            std::cout << "📋 Speed order question complete, showing results and player order..." << std::endl;
             
-            // Build turn order from sorted responses
-            json orderAnnouncement;
-            orderAnnouncement["type"] = "player_order";
-            orderAnnouncement["message"] = "Player Turn Order for Round 2";
-            orderAnnouncement["order"] = json::array();
+            // First, send speed results (without elimination) so players see their answers and times
+            broadcastToGame(game->pin, results.dump(), nullptr, ctx);
             
-            int position = 1;
-            for (const auto& [playerId, respPair] : sortedResponses) {
-                auto p = findPlayerById(game, playerId);
-                if (p) {
-                    json playerOrder;
-                    playerOrder["position"] = position;
-                    playerOrder["playerId"] = playerId;
-                    playerOrder["playerName"] = p->name;
-                    playerOrder["responseTime"] = respPair.second / 1000.0;
-                    orderAnnouncement["order"].push_back(playerOrder);
-                    position++;
-                }
-            }
-            
-            broadcastToGame(game->pin, orderAnnouncement.dump(), nullptr, ctx);
-            
-            // Reset for Round 2
+            // Mark that we're in speed order phase so client knows not to auto-advance
             game->isSpeedOrderPhase = false;
             game->currentQuestion++;  // Move past speed order question
-            
-            // Announce Round 2 actually starting with question packs
-            json round2Actual;
-            round2Actual["type"] = "round2_questions_start";
-            round2Actual["message"] = "Round 2: Question Packs - Turn-Based Play";
-            broadcastToGame(game->pin, round2Actual.dump(), nullptr, ctx);
         } else {
             // Normal speed question - send results with elimination
             broadcastToGame(game->pin, results.dump(), nullptr, ctx);
@@ -813,6 +788,22 @@ void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerCont
         // Don't auto-transition - wait for host to continue
         std::cout << "✅ Tiebreak complete. Waiting for host to continue to Round 2..." << std::endl;
     }
+}
+
+void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    // Only host can continue
+    if (game->hostWsi != wsi) return;
+    
+    std::cout << "📋 Continuing from speed order to Round 2 question packs..." << std::endl;
+    
+    // Send round 2 questions start message
+    json round2Actual;
+    round2Actual["type"] = "round2_questions_start";
+    round2Actual["message"] = "Round 2: Question Packs - Turn-Based Play";
+    broadcastToGame(game->pin, round2Actual.dump(), nullptr, ctx);
 }
 
 void handleContinueToRound2(struct lws* wsi, ServerContext* ctx) {

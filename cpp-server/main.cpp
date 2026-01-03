@@ -55,6 +55,9 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                 else if (type == "continue_to_round2") {
                     handleContinueToRound2(wsi, ctx);
                 }
+                else if (type == "continue_from_speed_order") {
+                    handleContinueFromSpeedOrder(wsi, ctx);
+                }
                 else if (type == "select_question_pack") {
                     handleQuestionPackSelection(wsi, msg["packId"], ctx);
                 }

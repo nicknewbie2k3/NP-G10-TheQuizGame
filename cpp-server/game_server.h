@@ -121,6 +121,7 @@ void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerConte
 void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, ServerContext* ctx);
 void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerContext* ctx);
 void handleContinueToRound2(struct lws* wsi, ServerContext* ctx);
+void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx);
 void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, ServerContext* ctx);
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx);
 void handleNextQuestion(struct lws* wsi, ServerContext* ctx);
