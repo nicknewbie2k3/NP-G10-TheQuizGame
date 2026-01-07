@@ -109,6 +109,27 @@ function handleMessage(message) {
         case 'round2_packs_available':
             handleRound2PacksAvailable(message);
             break;
+        case 'pack_selected':
+            handlePackSelected(message);
+            break;
+        case 'pack_waiting_host':
+            handlePackWaitingHost(message);
+            break;
+        case 'pack_questions':
+            handlePackQuestions(message);
+            break;
+        case 'pack_answer_verified':
+            handlePackAnswerVerified(message);
+            break;
+        case 'pack_complete':
+            handlePackComplete(message);
+            break;
+        case 'turn_ended':
+            handleTurnEnded(message);
+            break;
+        case 'round2_complete':
+            handleRound2Complete(message);
+            break;
         case 'game_ended':
             handleGameEnded(message);
             break;
@@ -633,6 +654,18 @@ function handleRound2PacksAvailable(message) {
     
     const content = document.getElementById('round2-packs-content');
     
+    // Update selected packs from server data
+    (message.packs || []).forEach((pack) => {
+        if (pack.selected) {
+            round2SelectedPacks.add(pack.id);
+        }
+    });
+    
+    // Move to next available player turn
+    if (round2CurrentTurnIndex > 0) {
+        round2CurrentTurnIndex = (round2CurrentTurnIndex + 1) % round2PlayerOrder.length;
+    }
+    
     // Show current player's turn
     const currentPlayer = round2PlayerOrder[round2CurrentTurnIndex];
     let html = '<div class="round2-header">';
@@ -665,14 +698,15 @@ function handleRound2PacksAvailable(message) {
     html += '<div class="packs-container">';
     
     (message.packs || []).forEach((pack) => {
-        const isSelected = round2SelectedPacks.has(pack.id);
+        const isSelected = pack.selected || round2SelectedPacks.has(pack.id);
+        const isSelectable = currentPlayer && currentPlayer.playerId === playerId && !isSelected;
         html += `
-            <div class="pack-card ${isSelected ? 'selected' : ''} ${currentPlayer && currentPlayer.playerId === playerId && !isSelected ? 'selectable' : ''}">
+            <div class="pack-card ${isSelected ? 'selected' : ''} ${isSelectable ? 'selectable' : ''}" data-pack-id="${pack.id}" data-selectable="${isSelectable}">
                 <div class="pack-title">${pack.title}</div>
                 <div class="pack-description">${pack.description}</div>
                 <div class="pack-questions">📝 ${pack.questionCount} questions</div>
-                ${!isSelected && currentPlayer && currentPlayer.playerId === playerId ? 
-                    `<button class="btn btn-secondary" onclick="selectQuestionPack('${pack.id}')">Select</button>` : 
+                ${isSelectable ? 
+                    `<button class="btn btn-secondary pack-select-btn" data-pack-id="${pack.id}">Select</button>` : 
                     ''}
                 ${isSelected ? '<div class="selected-badge">✅ Selected</div>' : ''}
             </div>
@@ -684,15 +718,335 @@ function handleRound2PacksAvailable(message) {
     
     content.innerHTML = html;
     showScreen('round2-turnbased-screen');
+    
+    // Add event listeners after HTML is inserted
+    const packCards = document.querySelectorAll('.pack-card[data-selectable="true"]');
+    packCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const packId = this.getAttribute('data-pack-id');
+            selectQuestionPack(packId);
+        });
+    });
+    
+    const selectButtons = document.querySelectorAll('.pack-select-btn');
+    selectButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const packId = this.getAttribute('data-pack-id');
+            selectQuestionPack(packId);
+        });
+    });
 }
 
 // Handle question pack selection
 function selectQuestionPack(packId) {
-    sendMessage({
+    console.log('selectQuestionPack called with:', packId);
+    
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
+        console.error('WebSocket not connected!');
+        showError('Not connected to server. Please refresh the page.');
+        return;
+    }
+    
+    const message = {
         type: 'select_question_pack',
         packId: packId
-    });
+    };
+    
+    console.log('Sending message:', message);
+    sendMessage(message);
     console.log('Selected question pack:', packId);
+}
+
+// Handle pack selected notification
+function handlePackSelected(message) {
+    console.log('Pack selected:', message);
+    // Just log it - the pack_waiting_host message will display the screen
+}
+
+// Handle waiting for host to start pack questions
+function handlePackWaitingHost(message) {
+    console.log('Waiting for host to start pack:', message);
+    
+    const content = document.getElementById('pack-waiting-content');
+    
+    let html = '<div class="pack-waiting-container">';
+    html += `<h2>📦 ${message.packTitle}</h2>`;
+    html += `<p class="pack-selected-by">Selected by: <strong>${message.playerName}</strong></p>`;
+    
+    if (isHost) {
+        html += '<div class="host-start-section">';
+        html += '<p class="host-instruction">Ready to start the questions?</p>';
+        html += '<button class="btn btn-primary btn-large start-pack-btn">▶️ Start Questions</button>';
+        html += '</div>';
+    } else {
+        html += '<div class="waiting-message">';
+        html += '<p>Waiting for host to start the questions...</p>';
+        html += '<div class="spinner"></div>';
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+    showScreen('pack-waiting-screen');
+    
+    // Add event listener for start button
+    if (isHost) {
+        const startBtn = document.querySelector('.start-pack-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', startPackQuestions);
+        }
+    }
+}
+
+// Host starts pack questions
+function startPackQuestions() {
+    sendMessage({
+        type: 'start_pack_questions'
+    });
+    console.log('Host starting pack questions...');
+}
+
+// Global timer variable
+let packTimer = null;
+let packTimeRemaining = 0;
+let currentPackQuestions = [];
+let currentPackQuestionIndex = 0;
+let currentPackScore = 0;
+let currentPackPlayer = '';
+
+// Handle pack questions display
+function handlePackQuestions(message) {
+    console.log('Received pack questions:', message);
+    
+    // Clear any existing timer
+    if (packTimer) {
+        clearInterval(packTimer);
+    }
+    
+    packTimeRemaining = message.timeLimit || 45;
+    currentPackQuestions = message.questions || [];
+    currentPackQuestionIndex = 0;
+    currentPackScore = 0;
+    currentPackPlayer = message.currentPlayer || 'Player';
+    
+    showScreen('pack-questions-screen');
+    displayCurrentPackQuestion();
+    
+    // Start timer
+    startPackTimer();
+}
+
+// Display the current question in the pack
+function displayCurrentPackQuestion() {
+    const content = document.getElementById('pack-questions-content');
+    
+    if (currentPackQuestionIndex >= currentPackQuestions.length) {
+        // All questions answered
+        let html = '<div class="pack-complete-container">';
+        html += `<h2>✅ Pack Complete!</h2>`;
+        html += `<p class="final-score">Final Score: ${currentPackScore}/${currentPackQuestions.length}</p>`;
+        html += '</div>';
+        content.innerHTML = html;
+        
+        if (packTimer) {
+            clearInterval(packTimer);
+        }
+        return;
+    }
+    
+    const question = currentPackQuestions[currentPackQuestionIndex];
+    
+    let html = '<div class="pack-questions-container">';
+    html += `<div class="pack-header">`;
+    html += `<h2>📚 Question Pack</h2>`;
+    html += `<p class="current-player-turn">${currentPackPlayer}'s Turn</p>`;
+    html += `</div>`;
+    
+    // Score and timer row
+    html += '<div class="pack-status-row">';
+    html += `<div class="pack-score">`;
+    html += `<div class="score-label">Score:</div>`;
+    html += `<div class="score-value">${currentPackScore}</div>`;
+    html += `</div>`;
+    html += `<div class="pack-timer" id="pack-timer">`;
+    html += `<div class="timer-label">Time:</div>`;
+    html += `<div class="timer-value" id="timer-value">${packTimeRemaining}s</div>`;
+    html += `</div>`;
+    html += '</div>';
+    
+    // Question progress
+    html += `<div class="question-progress">`;
+    html += `Question ${currentPackQuestionIndex + 1} of ${currentPackQuestions.length}`;
+    html += `</div>`;
+    
+    // Current question
+    html += '<div class="current-question-display">';
+    html += `<div class="question-text-large">${question.text}</div>`;
+    html += `<div class="question-answer-reveal">`;
+    html += `<strong>Answer:</strong> <span class="answer-highlight">${question.answer}</span>`;
+    html += `</div>`;
+    html += '</div>';
+    
+    // Host controls
+    if (isHost) {
+        html += '<div class="host-verification-buttons">';
+        html += '<button class="btn btn-success btn-large verify-btn" data-correct="true">✅ Correct (+1)</button>';
+        html += '<button class="btn btn-danger btn-large verify-btn" data-correct="false">❌ Incorrect (+0)</button>';
+        html += '</div>';
+    } else {
+        html += '<div class="player-waiting">';
+        html += '<p>Waiting for host verification...</p>';
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+    
+    // Add event listeners for host buttons
+    if (isHost) {
+        const verifyButtons = document.querySelectorAll('.verify-btn');
+        verifyButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const isCorrect = this.getAttribute('data-correct') === 'true';
+                verifyAnswer(isCorrect);
+            });
+        });
+    }
+}
+
+// Host verifies answer
+function verifyAnswer(isCorrect) {
+    console.log('Verifying answer:', isCorrect);
+    
+    // Update score
+    if (isCorrect) {
+        currentPackScore++;
+    }
+    
+    // Send to server
+    sendMessage({
+        type: 'pack_answer_verified',
+        isCorrect: isCorrect,
+        questionIndex: currentPackQuestionIndex
+    });
+    
+    // Move to next question
+    currentPackQuestionIndex++;
+    
+    // Small delay before showing next question
+    setTimeout(() => {
+        displayCurrentPackQuestion();
+    }, 500);
+}
+
+// Start the pack timer
+function startPackTimer() {
+    packTimer = setInterval(() => {
+        packTimeRemaining--;
+        
+        const timerElement = document.getElementById('timer-value');
+        if (timerElement) {
+            timerElement.textContent = packTimeRemaining + 's';
+            
+            // Change color as time runs out
+            if (packTimeRemaining <= 10) {
+                timerElement.style.color = '#dc3545';
+                timerElement.classList.add('timer-warning');
+            } else if (packTimeRemaining <= 20) {
+                timerElement.style.color = '#ffc107';
+            }
+        }
+        
+        if (packTimeRemaining <= 0) {
+            clearInterval(packTimer);
+            if (timerElement) {
+                timerElement.textContent = "Time's Up!";
+            }
+        }
+    }, 1000);
+}
+
+// Handle pack answer verified (sync for non-host players)
+function handlePackAnswerVerified(message) {
+    console.log('Answer verified:', message);
+    
+    if (!isHost) {
+        // Update score for non-host players
+        if (message.isCorrect) {
+            currentPackScore++;
+        }
+        currentPackQuestionIndex++;
+        
+        setTimeout(() => {
+            displayCurrentPackQuestion();
+        }, 500);
+    }
+}
+
+// Handle pack complete
+function handlePackComplete(message) {
+    console.log('Pack complete:', message);
+    
+    if (packTimer) {
+        clearInterval(packTimer);
+    }
+    
+    const content = document.getElementById('pack-questions-content');
+    let html = '<div class="pack-complete-container">';
+    html += `<h2>✅ Pack Complete!</h2>`;
+    html += `<p class="pack-player">${message.playerName || currentPackPlayer}</p>`;
+    html += `<p class="final-score">Final Score: ${message.score || currentPackScore}</p>`;
+    
+    html += '<div class="button-group">';
+    if (isHost) {
+        html += '<button class="btn btn-primary btn-large next-turn-btn">Next Player →</button>';
+    } else {
+        html += '<button class="btn btn-secondary btn-large" disabled>Waiting for host...</button>';
+    }
+    html += '</div>'
+    
+    html += '</div>';
+    content.innerHTML = html;
+    
+    // Add event listener for next turn button
+    if (isHost) {
+        const nextBtn = document.querySelector('.next-turn-btn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', endTurn);
+        }
+    }
+}
+
+// End turn function
+function endTurn() {
+    if (packTimer) {
+        clearInterval(packTimer);
+    }
+    
+    sendMessage({
+        type: 'end_turn'
+    });
+    console.log('Ending turn...');
+}
+
+// Handle turn ended
+function handleTurnEnded(message) {
+    console.log('Turn ended:', message);
+    // Will receive updated packs list next
+}
+
+// Handle Round 2 complete
+function handleRound2Complete(message) {
+    const content = document.getElementById('round2-complete-content');
+    html = `<div class="round-complete-message">
+        <h2>🎉 ${message.message}</h2>
+        <p>All question packs have been completed!</p>
+    </div>`;
+    content.innerHTML = html;
+    showScreen('round2-complete-screen');
 }
 
 // Handle game ended

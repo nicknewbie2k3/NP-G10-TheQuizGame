@@ -79,6 +79,8 @@ struct Game {
     std::vector<QuestionPack> questionPacks;
     std::shared_ptr<QuestionPack> currentPack;
     int currentPackQuestionIndex;
+    int currentPackScore;
+    std::string currentPackPlayerId;
     bool waitingForHost;
     std::map<std::string, std::vector<int>> turnScores;
     int currentTurnNumber;
@@ -123,6 +125,9 @@ void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerCont
 void handleContinueToRound2(struct lws* wsi, ServerContext* ctx);
 void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx);
 void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, ServerContext* ctx);
+void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx);
+void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex, ServerContext* ctx);
+void handleEndTurn(struct lws* wsi, ServerContext* ctx);
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx);
 void handleNextQuestion(struct lws* wsi, ServerContext* ctx);
 void handleNextRound(struct lws* wsi, ServerContext* ctx);

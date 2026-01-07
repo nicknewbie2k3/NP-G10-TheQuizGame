@@ -4,6 +4,7 @@
 #include <sstream>
 #include <ctime>
 #include <iostream>
+#include <fstream>
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -901,7 +902,243 @@ void handleDisconnection(struct lws* wsi, ServerContext* ctx) {
 
 // Placeholder implementations for remaining handlers
 void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, ServerContext* ctx) {
-    // TODO: Implement pack selection logic
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    auto player = findPlayerByWsi(game, wsi);
+    if (!player) return;
+    
+    // Check if this pack was already selected
+    if (std::find(game->selectedPacks.begin(), game->selectedPacks.end(), packId) != game->selectedPacks.end()) {
+        json error;
+        error["type"] = "error";
+        error["message"] = "This pack has already been selected";
+        sendToClient(wsi, error.dump());
+        return;
+    }
+    
+    // Find the pack
+    auto packIt = std::find_if(ctx->questionPacks.begin(), ctx->questionPacks.end(),
+        [&packId](const QuestionPack& p) { return p.id == packId; });
+    
+    if (packIt == ctx->questionPacks.end()) {
+        json error;
+        error["type"] = "error";
+        error["message"] = "Pack not found";
+        sendToClient(wsi, error.dump());
+        return;
+    }
+    
+    // Mark pack as selected
+    game->selectedPacks.push_back(packId);
+    game->currentPack = std::make_shared<QuestionPack>(*packIt);
+    game->currentPackQuestionIndex = 0;
+    game->currentPackScore = 0;
+    game->currentPackPlayerId = player->id;
+    game->turnStartTime = std::chrono::steady_clock::now();
+    
+    std::cout << "📦 Player " << player->name << " selected pack: " << packIt->title << std::endl;
+    
+    // Send pack selected message to all players
+    json packSelectedMsg;
+    packSelectedMsg["type"] = "pack_selected";
+    packSelectedMsg["packId"] = packId;
+    packSelectedMsg["packTitle"] = packIt->title;
+    packSelectedMsg["playerName"] = player->name;
+    packSelectedMsg["playerId"] = player->id;
+    broadcastToGame(game->pin, packSelectedMsg.dump(), nullptr, ctx);
+    
+    // Send all pack questions to the game immediately
+    json questionsMsg;
+    questionsMsg["type"] = "pack_questions";
+    questionsMsg["packTitle"] = packIt->title;
+    questionsMsg["questions"] = json::array();
+    questionsMsg["timeLimit"] = 45; // 45 seconds total
+    questionsMsg["currentPlayer"] = player->name;
+    
+    // Read the pack data from JSON to get answers
+    std::ifstream packFile("questions/round2-question-packs.json");
+    if (packFile.is_open()) {
+        json packsJson;
+        packFile >> packsJson;
+        
+        // Find the matching pack in JSON
+        for (const auto& jsonPack : packsJson) {
+            if (jsonPack["id"] == packId) {
+                // Use questions from JSON which have the answer field
+                for (const auto& q : jsonPack["questions"]) {
+                    json questionData;
+                    questionData["id"] = q["id"];
+                    questionData["text"] = q["text"];
+                    questionData["answer"] = q["answer"];
+                    questionsMsg["questions"].push_back(questionData);
+                }
+                break;
+            }
+        }
+    }
+    
+    broadcastToGame(game->pin, questionsMsg.dump(), nullptr, ctx);
+}
+
+void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    // Only host can start pack questions
+    if (game->hostWsi != wsi) return;
+    
+    if (!game->currentPack) {
+        json error;
+        error["type"] = "error";
+        error["message"] = "No pack selected";
+        sendToClient(wsi, error.dump());
+        return;
+    }
+    
+    std::cout << "▶️ Host starting questions for pack: " << game->currentPack->title << std::endl;
+    
+    // Reset timer
+    game->turnStartTime = std::chrono::steady_clock::now();
+    
+    // Send all pack questions to the game
+    json questionsMsg;
+    questionsMsg["type"] = "pack_questions";
+    questionsMsg["packTitle"] = game->currentPack->title;
+    questionsMsg["questions"] = json::array();
+    questionsMsg["timeLimit"] = 45; // 45 seconds total
+    
+    // Read the pack data from JSON to get answers
+    std::ifstream packFile("questions/round2-question-packs.json");
+    if (packFile.is_open()) {
+        json packsJson;
+        packFile >> packsJson;
+        
+        // Find the matching pack in JSON
+        for (const auto& jsonPack : packsJson) {
+            if (jsonPack["id"] == game->currentPack->id) {
+                // Use questions from JSON which have the answer field
+                for (const auto& q : jsonPack["questions"]) {
+                    json questionData;
+                    questionData["id"] = q["id"];
+                    questionData["text"] = q["text"];
+                    questionData["answer"] = q["answer"];
+                    questionsMsg["questions"].push_back(questionData);
+                }
+                break;
+            }
+        }
+    }
+    
+    broadcastToGame(game->pin, questionsMsg.dump(), nullptr, ctx);
+}
+
+void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    // Only host can verify answers
+    if (game->hostWsi != wsi) return;
+    
+    if (!game->currentPack) return;
+    
+    std::cout << "✅ Host verified answer: " << (isCorrect ? "Correct" : "Incorrect") << std::endl;
+    
+    // Update score
+    if (isCorrect) {
+        game->currentPackScore++;
+    }
+    
+    // Broadcast verification to all players
+    json verifyMsg;
+    verifyMsg["type"] = "pack_answer_verified";
+    verifyMsg["isCorrect"] = isCorrect;
+    verifyMsg["questionIndex"] = questionIndex;
+    verifyMsg["currentScore"] = game->currentPackScore;
+    broadcastToGame(game->pin, verifyMsg.dump(), nullptr, ctx);
+    
+    // Check if all questions answered
+    if (questionIndex + 1 >= static_cast<int>(game->currentPack->questions.size())) {
+        std::cout << "🎯 Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
+        
+        // Find current player
+        auto player = findPlayerById(game, game->currentPackPlayerId);
+        std::string playerName = player ? player->name : "Player";
+        
+        // Broadcast pack completion
+        json completeMsg;
+        completeMsg["type"] = "pack_complete";
+        completeMsg["playerName"] = playerName;
+        completeMsg["score"] = game->currentPackScore;
+        completeMsg["totalQuestions"] = game->currentPack->questions.size();
+        broadcastToGame(game->pin, completeMsg.dump(), nullptr, ctx);
+        
+        // Reset pack state
+        game->currentPack = nullptr;
+        game->currentPackScore = 0;
+        game->currentPackPlayerId = "";
+    }
+}
+
+void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    auto player = findPlayerByWsi(game, wsi);
+    if (!player) return;
+    
+    std::cout << "⏹️ Player " << player->name << " ended their turn" << std::endl;
+    
+    // Notify all players that turn has ended
+    json turnEndedMsg;
+    turnEndedMsg["type"] = "turn_ended";
+    turnEndedMsg["playerName"] = player->name;
+    broadcastToGame(game->pin, turnEndedMsg.dump(), nullptr, ctx);
+    
+    // Move to next player or end round
+    // For now, just send updated pack availability
+    // (The client will handle turn progression)
+    
+    // Get remaining active players
+    std::vector<std::shared_ptr<Player>> activePlayers;
+    for (const auto& p : game->activePlayers) {
+        if (!p->isEliminated) {
+            activePlayers.push_back(p);
+        }
+    }
+    
+    // Check if all packs are selected or all players have had turns
+    if (game->selectedPacks.size() >= ctx->questionPacks.size()) {
+        // Round 2 complete
+        json round2CompleteMsg;
+        round2CompleteMsg["type"] = "round2_complete";
+        round2CompleteMsg["message"] = "Round 2 Complete!";
+        broadcastToGame(game->pin, round2CompleteMsg.dump(), nullptr, ctx);
+        return;
+    }
+    
+    // Send updated packs with next player's turn
+    json packsMsg;
+    packsMsg["type"] = "round2_packs_available";
+    packsMsg["packs"] = json::array();
+    
+    for (const auto& pack : ctx->questionPacks) {
+        json packInfo;
+        packInfo["id"] = pack.id;
+        packInfo["title"] = pack.title;
+        packInfo["description"] = pack.description;
+        packInfo["questionCount"] = pack.questions.size();
+        
+        // Mark if already selected
+        bool isSelected = std::find(game->selectedPacks.begin(), game->selectedPacks.end(), pack.id) != game->selectedPacks.end();
+        if (isSelected) {
+            packInfo["selected"] = true;
+        }
+        
+        packsMsg["packs"].push_back(packInfo);
+    }
+    
+    broadcastToGame(game->pin, packsMsg.dump(), nullptr, ctx);
 }
 
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx) {
