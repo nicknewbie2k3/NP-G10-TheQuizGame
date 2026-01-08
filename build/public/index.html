@@ -18,10 +18,10 @@
                 <div class="landing-container">
                     <h2>Welcome to Quiz Game!</h2>
                     <div class="button-group">
-                        <button class="btn btn-primary btn-large" onclick="showHostGame()">
+                        <button class="btn btn-primary btn-large" id="host-game-btn">
                             🎮 Host a Game
                         </button>
-                        <button class="btn btn-secondary btn-large" onclick="showJoinGame()">
+                        <button class="btn btn-secondary btn-large" id="join-game-btn">
                             👥 Join Game
                         </button>
                     </div>
@@ -45,7 +45,7 @@
                         </div>
                         <div class="button-group">
                             <button type="submit" class="btn btn-primary">Join</button>
-                            <button type="button" class="btn btn-secondary" onclick="showLanding()">Back</button>
+                            <button type="button" class="btn btn-secondary" id="back-to-landing-btn">Back</button>
                         </div>
                     </form>
                 </div>
@@ -69,10 +69,10 @@
                     </div>
                     
                     <div class="button-group">
-                        <button class="btn btn-primary btn-large" onclick="startGame()" id="start-btn" disabled>
+                        <button class="btn btn-primary btn-large" id="start-btn" disabled>
                             🚀 Start Game
                         </button>
-                        <button class="btn btn-secondary" onclick="endGame()">End Game</button>
+                        <button class="btn btn-secondary" id="end-game-btn">End Game</button>
                     </div>
                 </div>
             </div>
@@ -126,7 +126,7 @@
                         <!-- Results will be inserted here -->
                     </div>
                     <div class="button-group">
-                        <button class="btn btn-primary" onclick="nextQuestion()" id="next-question-btn">
+                        <button class="btn btn-primary" id="next-question-btn">
                             Next Question →
                         </button>
                     </div>
@@ -141,7 +141,7 @@
                         <!-- Round results will be inserted here -->
                     </div>
                     <div class="button-group">
-                        <button class="btn btn-primary btn-large" onclick="nextRound()">
+                        <button class="btn btn-primary btn-large" id="round-complete-next-btn">
                             Continue to Next Round →
                         </button>
                     </div>
@@ -189,7 +189,7 @@
                         <!-- Speed results will be inserted here -->
                     </div>
                     <div class="button-group" id="speed-host-controls" style="display: none;">
-                        <button class="btn btn-primary btn-large" onclick="continueToRound2()">
+                        <button class="btn btn-primary btn-large" id="continue-from-speed-btn">
                             Continue to Round 2 Question Packs →
                         </button>
                     </div>
@@ -254,7 +254,7 @@
                         <!-- Tiebreak results will be inserted here -->
                     </div>
                     <div class="button-group" id="tiebreak-host-controls" style="display: none;">
-                        <button class="btn btn-primary btn-large" onclick="continueToRound2()">
+                        <button class="btn btn-primary btn-large" id="next-round-btn">
                             Continue to Round 2 →
                         </button>
                     </div>
@@ -342,7 +342,7 @@
                         <!-- Final results will be inserted here -->
                     </div>
                     <div class="button-group">
-                        <button class="btn btn-primary btn-large" onclick="showLanding()">
+                        <button class="btn btn-primary btn-large" id="game-over-home-btn">
                             Back to Home
                         </button>
                     </div>

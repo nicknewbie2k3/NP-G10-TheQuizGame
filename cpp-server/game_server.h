@@ -85,6 +85,10 @@ struct Game {
     std::map<std::string, std::vector<int>> turnScores;
     int currentTurnNumber;
     std::vector<std::string> selectedPacks;
+    std::vector<std::string> round2PlayerOrder; // Player IDs in order
+    int round2CurrentTurnIndex;
+    std::map<std::string, int> round2Scores; // Track each player's Round 2 total score
+    int round2TurnsCompleted; // Track total turns completed
     
     // Timing
     std::chrono::steady_clock::time_point turnStartTime;

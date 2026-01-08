@@ -130,6 +130,9 @@ function handleMessage(message) {
         case 'round2_complete':
             handleRound2Complete(message);
             break;
+        case 'game_over':
+            handleGameOver(message);
+            break;
         case 'game_ended':
             handleGameEnded(message);
             break;
@@ -651,6 +654,8 @@ function handleRound2PlayerOrder(message) {
 // Handle question packs available
 function handleRound2PacksAvailable(message) {
     console.log('Received Round 2 question packs:', message);
+    console.log('Current turn index from server:', message.currentTurnIndex);
+    console.log('Local turn index before update:', round2CurrentTurnIndex);
     
     const content = document.getElementById('round2-packs-content');
     
@@ -661,9 +666,9 @@ function handleRound2PacksAvailable(message) {
         }
     });
     
-    // Move to next available player turn
-    if (round2CurrentTurnIndex > 0) {
-        round2CurrentTurnIndex = (round2CurrentTurnIndex + 1) % round2PlayerOrder.length;
+    // Update turn index from server if provided, otherwise increment
+    if (message.currentTurnIndex !== undefined) {
+        round2CurrentTurnIndex = message.currentTurnIndex;
     }
     
     // Show current player's turn
@@ -936,10 +941,8 @@ function verifyAnswer(isCorrect) {
     // Move to next question
     currentPackQuestionIndex++;
     
-    // Small delay before showing next question
-    setTimeout(() => {
-        displayCurrentPackQuestion();
-    }, 500);
+    // Don't show next question - wait for server to send pack_complete or pack_answer_verified
+    // The server will handle progression and broadcast to all players
 }
 
 // Start the pack timer
@@ -1006,7 +1009,7 @@ function handlePackComplete(message) {
     } else {
         html += '<button class="btn btn-secondary btn-large" disabled>Waiting for host...</button>';
     }
-    html += '</div>'
+    html += '</div>';
     
     html += '</div>';
     content.innerHTML = html;
@@ -1015,27 +1018,87 @@ function handlePackComplete(message) {
     if (isHost) {
         const nextBtn = document.querySelector('.next-turn-btn');
         if (nextBtn) {
-            nextBtn.addEventListener('click', endTurn);
+            console.log('Adding click listener to Next Player button');
+            nextBtn.addEventListener('click', function() {
+                console.log('Next Player button clicked!');
+                endTurn();
+            });
+        } else {
+            console.error('Next turn button not found in DOM!');
         }
     }
 }
 
 // End turn function
 function endTurn() {
+    console.log('🔄 endTurn() called');
     if (packTimer) {
         clearInterval(packTimer);
     }
     
-    sendMessage({
+    const msg = {
         type: 'end_turn'
-    });
-    console.log('Ending turn...');
+    };
+    console.log('📤 Sending end_turn message:', msg);
+    sendMessage(msg);
 }
 
 // Handle turn ended
 function handleTurnEnded(message) {
-    console.log('Turn ended:', message);
-    // Will receive updated packs list next
+    console.log('📨 Turn ended message received:', message);
+    // Server will send round2_packs_available next with updated turn index
+}
+
+// Handle game over with winners
+function handleGameOver(message) {
+    console.log('Game Over!', message);
+    
+    const content = document.getElementById('final-results');
+    
+    let html = '<div class="game-over-content">';
+    
+    // Show winner(s)
+    if (message.winners && message.winners.length > 0) {
+        html += '<div class="winners-section">';
+        if (message.winners.length === 1) {
+            html += `<h2>🏆 Winner: ${message.winners[0]}!</h2>`;
+        } else {
+            html += `<h2>🏆 Winners (Tie):</h2>`;
+            html += '<ul class="winners-list">';
+            message.winners.forEach(winner => {
+                html += `<li>${winner}</li>`;
+            });
+            html += '</ul>';
+        }
+        html += '</div>';
+    }
+    
+    // Show final scores
+    if (message.finalScores && message.finalScores.length > 0) {
+        html += '<div class="final-scores-section">';
+        html += '<h3>Final Round 2 Scores:</h3>';
+        html += '<table class="scores-table">';
+        
+        // Sort by score descending
+        const sortedScores = message.finalScores.sort((a, b) => b.score - a.score);
+        
+        sortedScores.forEach((entry, index) => {
+            const isWinner = message.winners.includes(entry.playerName);
+            html += `<tr class="${isWinner ? 'winner-row' : ''}">`;
+            html += `<td class="rank">${index + 1}.</td>`;
+            html += `<td class="player-name">${entry.playerName}</td>`;
+            html += `<td class="score">${entry.score} points</td>`;
+            html += `</tr>`;
+        });
+        
+        html += '</table>';
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+    showScreen('game-over');
 }
 
 // Handle Round 2 complete
@@ -1155,45 +1218,44 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('🎮 Quiz Game initialized');
     showScreen('landing-page');
     
-    // Use event delegation on document for all buttons
-    document.addEventListener('click', (e) => {
-        const target = e.target.closest('button');
-        if (!target) return;
-        
-        // Get the onclick attribute value to determine which function to call
-        const onclickAttr = target.getAttribute('onclick');
-        
-        if (onclickAttr) {
-            e.preventDefault();
-            
-            // Check longer/more specific strings first to avoid conflicts
-            if (onclickAttr.includes('showHostGame')) {
-                showHostGame();
-            } else if (onclickAttr.includes('showJoinGame')) {
-                showJoinGame();
-            } else if (onclickAttr.includes('showLanding')) {
-                showLanding();
-            } else if (onclickAttr.includes('startGame')) {
-                startGame();
-            } else if (onclickAttr.includes('endGame')) {
-                endGame();
-            } else if (onclickAttr.includes('continueToRound2')) {
-                continueToRound2();
-            } else if (onclickAttr.includes('nextRound')) {
-                // Check nextRound BEFORE nextQuestion to avoid conflict
-                nextRound();
-            } else if (onclickAttr.includes('nextQuestion')) {
-                nextQuestion();
-            }
-        }
-    });
+    // Landing page buttons
+    const hostGameBtn = document.getElementById('host-game-btn');
+    const joinGameBtn = document.getElementById('join-game-btn');
+    if (hostGameBtn) hostGameBtn.addEventListener('click', showHostGame);
+    if (joinGameBtn) joinGameBtn.addEventListener('click', showJoinGame);
+    
+    // Join game back button
+    const backToLandingBtn = document.getElementById('back-to-landing-btn');
+    if (backToLandingBtn) backToLandingBtn.addEventListener('click', showLanding);
+    
+    // Host lobby buttons
+    const startBtn = document.getElementById('start-btn');
+    const endGameBtn = document.getElementById('end-game-btn');
+    if (startBtn) startBtn.addEventListener('click', startGame);
+    if (endGameBtn) endGameBtn.addEventListener('click', endGame);
+    
+    // Game buttons
+    const nextQuestionBtn = document.getElementById('next-question-btn');
+    const nextRoundBtn = document.getElementById('next-round-btn');
+    const roundCompleteNextBtn = document.getElementById('round-complete-next-btn');
+    if (nextQuestionBtn) nextQuestionBtn.addEventListener('click', nextQuestion);
+    if (nextRoundBtn) nextRoundBtn.addEventListener('click', nextRound);
+    if (roundCompleteNextBtn) roundCompleteNextBtn.addEventListener('click', nextRound);
+    
+    // Round 2 buttons
+    const continueFromSpeedBtn = document.getElementById('continue-from-speed-btn');
+    if (continueFromSpeedBtn) continueFromSpeedBtn.addEventListener('click', continueToRound2);
+    
+    // Game over button
+    const gameOverHomeBtn = document.getElementById('game-over-home-btn');
+    if (gameOverHomeBtn) gameOverHomeBtn.addEventListener('click', showLanding);
     
     // Handle form submissions
     document.addEventListener('submit', (e) => {
         const form = e.target;
-        const onsubmitAttr = form.getAttribute('onsubmit');
         
-        if (onsubmitAttr && onsubmitAttr.includes('joinGame')) {
+        // Handle join game form
+        if (form.querySelector('#game-pin') && form.querySelector('#player-name')) {
             e.preventDefault();
             joinGame(e);
         }

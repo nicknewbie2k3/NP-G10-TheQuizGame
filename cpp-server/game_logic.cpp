@@ -459,7 +459,9 @@ void handleNextRound(struct lws* wsi, ServerContext* ctx) {
     }
     
     if (game->currentRound == 2) {
-        // Start Round 2 - Speed Question Phase
+        // Start Round 2 - Speed Question Phase (for determining turn order)
+        game->isSpeedOrderPhase = true;  // Mark this as speed order phase - no elimination
+        
         json round2Start;
         round2Start["type"] = "round2_start";
         round2Start["message"] = "Round 2: Turn-Based Questions";
@@ -587,6 +589,24 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
             }
         }
         
+        // Check if this is speed_order phase (don't eliminate anyone, just show results)
+        std::cout << "🔍 Debug - isSpeedOrderPhase flag: " << (game->isSpeedOrderPhase ? "TRUE" : "FALSE") << std::endl;
+        if (game->isSpeedOrderPhase) {
+            std::cout << "📋 Speed order question complete, showing results and player order (NO elimination)..." << std::endl;
+            
+            // Send speed results without elimination
+            broadcastToGame(game->pin, results.dump(), nullptr, ctx);
+            
+            // Mark that we're done with speed order phase
+            game->isSpeedOrderPhase = false;
+            game->currentQuestion++;  // Move past speed order question
+            
+            // Clear speed responses for next round
+            game->speedResponses.clear();
+            return;  // Exit early - no elimination
+        }
+        
+        // Normal speed question - eliminate slowest/incorrect player
         // If no incorrect players, eliminate the slowest
         if (incorrectPlayers.empty()) {
             if (!sortedResponses.empty()) {
@@ -609,41 +629,13 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
                 eliminatedPlayer->isEliminated = true;
                 results["eliminated"]["playerId"] = eliminatedId;
                 results["eliminated"]["playerName"] = eliminatedName;
-                
-                // if (incorrectPlayers.empty()) {
-                //      results["eliminated"]["reason"] = "Slowest response";
-                // } else {
-                //      results["eliminated"]["reason"] = "Incorrect and slowest";
-                // }
 
                 std::cout << "❌ Player eliminated: " << eliminatedName << std::endl;
             }
         }
-        // // Eliminate the slowest/incorrect player
-        // if (!slowestPlayerId.empty()) {
-        //     auto eliminatedPlayer = findPlayerById(game, slowestPlayerId);
-        //     if (eliminatedPlayer) {
-        //         eliminatedPlayer->isEliminated = true;
-        //         results["eliminated"]["playerId"] = slowestPlayerId;
-        //         results["eliminated"]["playerName"] = slowestPlayerName;
-                
-        //         std::cout << "❌ Player eliminated: " << slowestPlayerName << std::endl;
-        //     }
-        // }        
-        // Check if this is speed_order phase (don't eliminate anyone, show different message)
-        if (game->isSpeedOrderPhase) {
-            std::cout << "📋 Speed order question complete, showing results and player order..." << std::endl;
-            
-            // First, send speed results (without elimination) so players see their answers and times
-            broadcastToGame(game->pin, results.dump(), nullptr, ctx);
-            
-            // Mark that we're in speed order phase so client knows not to auto-advance
-            game->isSpeedOrderPhase = false;
-            game->currentQuestion++;  // Move past speed order question
-        } else {
-            // Normal speed question - send results with elimination
-            broadcastToGame(game->pin, results.dump(), nullptr, ctx);
-        }
+        
+        // Send results with elimination
+        broadcastToGame(game->pin, results.dump(), nullptr, ctx);
         
         // Clear speed responses for next round
         game->speedResponses.clear();
@@ -800,10 +792,26 @@ void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
     
     std::cout << "📋 Continuing from speed order to Round 2 question packs..." << std::endl;
     
+    // Debug: Show all players and their elimination status
+    std::cout << "🔍 Debug - All players in game:" << std::endl;
+    for (const auto& p : game->players) {
+        std::cout << "  - Player " << p->name << " (ID: " << p->id << ") - Eliminated: " << (p->isEliminated ? "YES" : "NO") << std::endl;
+    }
+    std::cout << "🔍 Debug - Active players count: " << game->activePlayers.size() << std::endl;
+    for (const auto& p : game->activePlayers) {
+        std::cout << "  - Active player " << p->name << " (ID: " << p->id << ") - Eliminated: " << (p->isEliminated ? "YES" : "NO") << std::endl;
+    }
+    
     // First, create player order message based on active players (they should already be in order from speed round)
     json playerOrderMsg;
     playerOrderMsg["type"] = "round2_player_order";
     playerOrderMsg["playerOrder"] = json::array();
+    
+    // Store player order and initialize turn index
+    game->round2PlayerOrder.clear();
+    game->round2CurrentTurnIndex = 0;
+    game->round2TurnsCompleted = 0; // Initialize turns counter
+    game->round2Scores.clear(); // Clear scores
     
     int position = 1;
     for (const auto& player : game->activePlayers) {
@@ -813,8 +821,14 @@ void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
             playerInfo["playerId"] = player->id;
             playerInfo["playerName"] = player->name;
             playerOrderMsg["playerOrder"].push_back(playerInfo);
+            game->round2PlayerOrder.push_back(player->id);
             position++;
         }
+    }
+    
+    std::cout << "📋 Player order established with " << game->round2PlayerOrder.size() << " players" << std::endl;
+    for (size_t i = 0; i < game->round2PlayerOrder.size(); i++) {
+        std::cout << "  Position " << (i+1) << ": Player ID " << game->round2PlayerOrder[i] << std::endl;
     }
     
     broadcastToGame(game->pin, playerOrderMsg.dump(), nullptr, ctx);
@@ -832,6 +846,8 @@ void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
         packInfo["questionCount"] = pack.questions.size();
         packsMsg["packs"].push_back(packInfo);
     }
+    
+    packsMsg["currentTurnIndex"] = game->round2CurrentTurnIndex;
     
     broadcastToGame(game->pin, packsMsg.dump(), nullptr, ctx);
 }
@@ -1061,9 +1077,17 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
     if (questionIndex + 1 >= static_cast<int>(game->currentPack->questions.size())) {
         std::cout << "🎯 Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
         
-        // Find current player
+        // Find current player and add score to their Round 2 total
         auto player = findPlayerById(game, game->currentPackPlayerId);
         std::string playerName = player ? player->name : "Player";
+        
+        // Add to player's Round 2 score
+        if (game->round2Scores.find(game->currentPackPlayerId) == game->round2Scores.end()) {
+            game->round2Scores[game->currentPackPlayerId] = 0;
+        }
+        game->round2Scores[game->currentPackPlayerId] += game->currentPackScore;
+        
+        std::cout << "📊 " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
         
         // Broadcast pack completion
         json completeMsg;
@@ -1081,23 +1105,83 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
 }
 
 void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
+    std::cout << "🔍 handleEndTurn called" << std::endl;
+    
     auto game = findGameByWsi(wsi, ctx);
-    if (!game) return;
+    if (!game) {
+        std::cout << "❌ Game not found in handleEndTurn" << std::endl;
+        return;
+    }
     
-    auto player = findPlayerByWsi(game, wsi);
-    if (!player) return;
+    // Only host can end turn
+    if (game->hostWsi != wsi) {
+        std::cout << "❌ Only host can end turn" << std::endl;
+        return;
+    }
     
-    std::cout << "⏹️ Player " << player->name << " ended their turn" << std::endl;
+    std::cout << "⏹️ Host ended current player's turn" << std::endl;
     
-    // Notify all players that turn has ended
-    json turnEndedMsg;
-    turnEndedMsg["type"] = "turn_ended";
-    turnEndedMsg["playerName"] = player->name;
-    broadcastToGame(game->pin, turnEndedMsg.dump(), nullptr, ctx);
+    // Increment turns completed
+    game->round2TurnsCompleted++;
     
-    // Move to next player or end round
-    // For now, just send updated pack availability
-    // (The client will handle turn progression)
+    // Check if 2 full cycles are complete (each player gets 2 turns)
+    int totalTurnsNeeded = game->round2PlayerOrder.size() * 2;
+    
+    std::cout << "📊 Turns completed: " << game->round2TurnsCompleted << "/" << totalTurnsNeeded << std::endl;
+    
+    if (game->round2TurnsCompleted >= totalTurnsNeeded) {
+        std::cout << "🏁 Round 2 complete! Calculating winners..." << std::endl;
+        
+        // Find highest score
+        int highestScore = 0;
+        for (const auto& entry : game->round2Scores) {
+            if (entry.second > highestScore) {
+                highestScore = entry.second;
+            }
+        }
+        
+        // Find all players with highest score
+        std::vector<std::string> winners;
+        for (const auto& entry : game->round2Scores) {
+            if (entry.second == highestScore) {
+                auto player = findPlayerById(game, entry.first);
+                if (player) {
+                    winners.push_back(player->name);
+                }
+            }
+        }
+        
+        // Broadcast game over with winners
+        json gameOverMsg;
+        gameOverMsg["type"] = "game_over";
+        gameOverMsg["winners"] = json::array();
+        for (const auto& winner : winners) {
+            gameOverMsg["winners"].push_back(winner);
+        }
+        gameOverMsg["finalScores"] = json::array();
+        for (const auto& entry : game->round2Scores) {
+            auto player = findPlayerById(game, entry.first);
+            if (player) {
+                json scoreInfo;
+                scoreInfo["playerName"] = player->name;
+                scoreInfo["score"] = entry.second;
+                gameOverMsg["finalScores"].push_back(scoreInfo);
+            }
+        }
+        
+        std::cout << "🏆 Winners: ";
+        for (size_t i = 0; i < winners.size(); i++) {
+            std::cout << winners[i];
+            if (i < winners.size() - 1) std::cout << ", ";
+        }
+        std::cout << " with score: " << highestScore << std::endl;
+        
+        broadcastToGame(game->pin, gameOverMsg.dump(), nullptr, ctx);
+        return;
+    }
+    
+    // Don't send turn_ended message - just move to next player
+    // The round2_packs_available message will update the UI
     
     // Get remaining active players
     std::vector<std::shared_ptr<Player>> activePlayers;
@@ -1118,6 +1202,12 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
     }
     
     // Send updated packs with next player's turn
+    if (!game->round2PlayerOrder.empty()) {
+        std::cout << "📍 Current turn index before increment: " << game->round2CurrentTurnIndex << std::endl;
+        game->round2CurrentTurnIndex = (game->round2CurrentTurnIndex + 1) % game->round2PlayerOrder.size();
+        std::cout << "📍 Moving to turn index: " << game->round2CurrentTurnIndex << " (Player ID: " << game->round2PlayerOrder[game->round2CurrentTurnIndex] << ")" << std::endl;
+    }
+    
     json packsMsg;
     packsMsg["type"] = "round2_packs_available";
     packsMsg["packs"] = json::array();
@@ -1137,6 +1227,8 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
         
         packsMsg["packs"].push_back(packInfo);
     }
+    
+    packsMsg["currentTurnIndex"] = game->round2CurrentTurnIndex;
     
     broadcastToGame(game->pin, packsMsg.dump(), nullptr, ctx);
 }
