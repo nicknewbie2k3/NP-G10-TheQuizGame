@@ -594,6 +594,14 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         if (game->isSpeedOrderPhase) {
             std::cout << "📋 Speed order question complete, showing results and player order (NO elimination)..." << std::endl;
             
+            // Store speed round response times for tiebreaking later
+            for (const auto& response : sortedResponses) {
+                const auto& playerId = response.first;
+                const auto& responseTime = response.second.second;
+                game->speedOrderTimes[playerId] = responseTime;
+                std::cout << "💾 Saved speed time for player " << playerId << ": " << responseTime << "ms" << std::endl;
+            }
+            
             // Re-order activePlayers based on speed order results
             // Correct answers first (sorted by time), then incorrect answers (sorted by time)
             std::vector<std::shared_ptr<Player>> reorderedPlayers;
@@ -1152,6 +1160,109 @@ void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
     broadcastToGame(game->pin, playerQuestionsMsg.dump(), game->hostWsi, ctx);
 }
 
+void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int questionIndex, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    if (game->gameState == "finished") return;
+    
+    if (!game->currentPack) return;
+    
+    // Find the player who submitted
+    auto player = findPlayerByWsi(game, wsi);
+    if (!player) return;
+    
+    std::cout << "📝 Player " << player->name << " submitted answer: " << answer << std::endl;
+    
+    // Get the correct answer from JSON file
+    if (questionIndex < 0 || questionIndex >= static_cast<int>(game->currentPack->questions.size())) {
+        return;
+    }
+    
+    std::string correctAnswer = "";
+    
+    // Read the pack data from JSON to get the answer
+    std::ifstream packFile("questions/round2-question-packs.json");
+    if (packFile.is_open()) {
+        json packsJson;
+        packFile >> packsJson;
+        
+        // Find the matching pack in JSON
+        for (const auto& jsonPack : packsJson) {
+            if (jsonPack["id"] == game->currentPack->id) {
+                if (questionIndex < static_cast<int>(jsonPack["questions"].size())) {
+                    correctAnswer = jsonPack["questions"][questionIndex]["answer"];
+                }
+                break;
+            }
+        }
+    }
+    
+    if (correctAnswer.empty()) {
+        std::cout << "❌ Could not find correct answer for question" << std::endl;
+        return;
+    }
+    
+    // Case-insensitive comparison
+    std::string playerAnswer = answer;
+    std::transform(playerAnswer.begin(), playerAnswer.end(), playerAnswer.begin(), ::tolower);
+    std::transform(correctAnswer.begin(), correctAnswer.end(), correctAnswer.begin(), ::tolower);
+    
+    bool isCorrect = (playerAnswer == correctAnswer);
+    
+    std::cout << "🔍 Auto-check: " << (isCorrect ? "CORRECT" : "INCORRECT") << std::endl;
+    std::cout << "   Player answer: " << answer << std::endl;
+    std::cout << "   Correct answer: " << correctAnswer << std::endl;
+    
+    // Update score automatically based on auto-check
+    if (isCorrect) {
+        game->currentPackScore++;
+        std::cout << "✅ Score updated to: " << game->currentPackScore << std::endl;
+    }
+    
+    // Broadcast the verification result (same as manual verification)
+    json verifyMsg;
+    verifyMsg["type"] = "pack_answer_verified";
+    verifyMsg["isCorrect"] = isCorrect;
+    verifyMsg["questionIndex"] = questionIndex;
+    verifyMsg["currentScore"] = game->currentPackScore;
+    verifyMsg["playerAnswer"] = answer;
+    verifyMsg["correctAnswer"] = correctAnswer;
+    verifyMsg["autoVerified"] = true;
+    broadcastToGame(game->pin, verifyMsg.dump(), nullptr, ctx);
+    
+    // Check if all questions answered
+    if (questionIndex + 1 >= static_cast<int>(game->currentPack->questions.size())) {
+        std::cout << "🎯 Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
+        
+        // Find current player and add score to their Round 2 total
+        auto currentPlayer = findPlayerById(game, game->currentPackPlayerId);
+        std::string playerName = currentPlayer ? currentPlayer->name : "Player";
+        
+        // Add to player's Round 2 score
+        if (game->round2Scores.find(game->currentPackPlayerId) == game->round2Scores.end()) {
+            game->round2Scores[game->currentPackPlayerId] = 0;
+        }
+        game->round2Scores[game->currentPackPlayerId] += game->currentPackScore;
+        
+        std::cout << "📊 " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
+        
+        // Broadcast pack completion
+        json completeMsg;
+        completeMsg["type"] = "pack_complete";
+        completeMsg["playerName"] = playerName;
+        completeMsg["score"] = game->currentPackScore;
+        completeMsg["totalQuestions"] = game->currentPack->questions.size();
+        completeMsg["totalRound2Score"] = game->round2Scores[game->currentPackPlayerId];
+        broadcastToGame(game->pin, completeMsg.dump(), nullptr, ctx);
+        
+        // Reset pack state
+        game->currentPack = nullptr;
+        game->currentPackScore = 0;
+        game->currentPackPlayerId = "";
+    }
+}
+
 void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex, ServerContext* ctx) {
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;
@@ -1315,23 +1426,54 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
         }
         
         // Find all players with highest score
-        std::vector<std::string> winners;
+        std::vector<std::string> tiedPlayerIds;
         for (const auto& entry : game->round2Scores) {
             if (entry.second == highestScore) {
-                auto player = findPlayerById(game, entry.first);
-                if (player) {
-                    winners.push_back(player->name);
-                }
+                tiedPlayerIds.push_back(entry.first);
             }
         }
         
-        // Broadcast game over with winners
+        // Tiebreaker: if multiple players have the same score, use speed round time
+        std::string winnerId;
+        std::string winnerName;
+        
+        if (tiedPlayerIds.size() > 1) {
+            std::cout << "⚖️ Tie detected! " << tiedPlayerIds.size() << " players with score " << highestScore << std::endl;
+            std::cout << "🏃 Using speed round response time as tiebreaker..." << std::endl;
+            
+            // Find the player with the fastest speed round time
+            long fastestTime = LONG_MAX;
+            for (const auto& playerId : tiedPlayerIds) {
+                if (game->speedOrderTimes.find(playerId) != game->speedOrderTimes.end()) {
+                    long playerTime = game->speedOrderTimes[playerId];
+                    std::cout << "   Player " << playerId << ": " << playerTime << "ms" << std::endl;
+                    
+                    if (playerTime < fastestTime) {
+                        fastestTime = playerTime;
+                        winnerId = playerId;
+                    }
+                }
+            }
+            
+            auto winner = findPlayerById(game, winnerId);
+            if (winner) {
+                winnerName = winner->name;
+                std::cout << "🏆 Tiebreaker winner: " << winnerName << " (fastest: " << fastestTime << "ms)" << std::endl;
+            }
+        } else {
+            // Single winner
+            winnerId = tiedPlayerIds[0];
+            auto winner = findPlayerById(game, winnerId);
+            if (winner) {
+                winnerName = winner->name;
+            }
+        }
+        
+        // Broadcast game over with single winner
         json gameOverMsg;
         gameOverMsg["type"] = "game_over";
         gameOverMsg["winners"] = json::array();
-        for (const auto& winner : winners) {
-            gameOverMsg["winners"].push_back(winner);
-        }
+        gameOverMsg["winners"].push_back(winnerName);
         gameOverMsg["finalScores"] = json::array();
         for (const auto& entry : game->round2Scores) {
             auto player = findPlayerById(game, entry.first);
@@ -1343,12 +1485,7 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
             }
         }
         
-        std::cout << "🏆 Winners: ";
-        for (size_t i = 0; i < winners.size(); i++) {
-            std::cout << winners[i];
-            if (i < winners.size() - 1) std::cout << ", ";
-        }
-        std::cout << " with score: " << highestScore << std::endl;
+        std::cout << "🏆 Winner: " << winnerName << " with score: " << highestScore << std::endl;
         
         broadcastToGame(game->pin, gameOverMsg.dump(), nullptr, ctx);
         return;

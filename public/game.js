@@ -118,6 +118,9 @@ function handleMessage(message) {
         case 'pack_questions':
             handlePackQuestions(message);
             break;
+        case 'player_answer_submitted':
+            handlePlayerAnswerSubmitted(message);
+            break;
         case 'pack_answer_verified':
             handlePackAnswerVerified(message);
             break;
@@ -452,16 +455,21 @@ function handleSpeedResults(message) {
         return;
     }
     
+    // Re-order results: correct answers first (by time), then incorrect (by time)
+    const correctResults = results.filter(r => r.correct).sort((a, b) => a.responseTime - b.responseTime);
+    const incorrectResults = results.filter(r => !r.correct).sort((a, b) => a.responseTime - b.responseTime);
+    const orderedResults = [...correctResults, ...incorrectResults];
+    
     const content = document.getElementById('speed-results-content');
     
     let html = '<div class="leaderboard">';
     html += '<h3>⚡ Speed Question Results</h3>';
     html += '<div class="speed-results-header">';
-    html += '<p>Players ranked by answer speed (fastest first)</p>';
+    html += '<p>Round 2 turn order (correct answers play first)</p>';
     html += '</div>';
     html += '<ol class="speed-results-list">';
     
-    results.forEach((result, index) => {
+    orderedResults.forEach((result, index) => {
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
         const correct = result.correct ? '✅' : '❌';
         html += `
@@ -918,8 +926,13 @@ function displayCurrentPackQuestion() {
         html += '<button class="btn btn-warning btn-large end-pack-early-btn">⏹️ End Turn Early</button>';
         html += '</div>';
     } else {
-        html += '<div class="player-waiting">';
-        html += '<p>Waiting for host verification...</p>';
+        // Player answer input
+        html += '<div class="player-answer-section">';
+        html += '<div class="answer-input-group">';
+        html += '<input type="text" id="player-answer-input" class="answer-input" placeholder="Type your answer here..." />';
+        html += '<button class="btn btn-primary btn-large submit-answer-btn">Submit Answer</button>';
+        html += '</div>';
+        html += '<p class="answer-status" id="answer-status"></p>';
         html += '</div>';
     }
     
@@ -941,34 +954,88 @@ function displayCurrentPackQuestion() {
         if (endEarlyBtn) {
             endEarlyBtn.addEventListener('click', endPackEarly);
         }
+    } else {
+        // Player answer submission
+        const submitBtn = document.querySelector('.submit-answer-btn');
+        const answerInput = document.getElementById('player-answer-input');
+        
+        if (submitBtn && answerInput) {
+            const handleSubmit = () => {
+                const answer = answerInput.value.trim();
+                if (answer) {
+                    submitPlayerAnswer(answer);
+                    answerInput.disabled = true;
+                    submitBtn.disabled = true;
+                }
+            };
+            
+            submitBtn.addEventListener('click', handleSubmit);
+            answerInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleSubmit();
+                }
+            });
+        }
     }
 }
 
-// Host verifies answer
+// Host verifies answer (manual override if needed)
 function verifyAnswer(isCorrect) {
-    console.log('Verifying answer:', isCorrect);
+    console.log('Host manually verifying answer:', isCorrect);
     
-    // Update score
-    if (isCorrect) {
-        currentPackScore++;
-    }
-    
-    // Send to server
+    // Send to server - server will update score and broadcast to all clients
     sendMessage({
         type: 'pack_answer_verified',
         isCorrect: isCorrect,
         questionIndex: currentPackQuestionIndex
     });
     
-    // Move to next question locally so host UI advances immediately
-    currentPackQuestionIndex++;
+    // Don't update locally - wait for server response to keep everything in sync
+}
 
-    // If more questions remain, show the next one right away for host
-    if (currentPackQuestionIndex < currentPackQuestions.length) {
-        displayCurrentPackQuestion();
+// Player submits their answer
+function submitPlayerAnswer(answer) {
+    console.log('Player submitting answer:', answer);
+    
+    sendMessage({
+        type: 'submit_pack_answer',
+        answer: answer,
+        questionIndex: currentPackQuestionIndex
+    });
+    
+    // Update status
+    const statusEl = document.getElementById('answer-status');
+    if (statusEl) {
+        statusEl.textContent = 'Answer submitted! Waiting for verification...';
+        statusEl.style.color = '#666';
+    }
+}
+
+// Handle player answer submission result
+function handlePlayerAnswerSubmitted(message) {
+    console.log('Player answer submitted:', message);
+    
+    // Update player's status
+    const statusEl = document.getElementById('answer-status');
+    if (statusEl) {
+        const resultClass = message.autoCheckResult ? 'correct-answer' : 'incorrect-answer';
+        const resultText = message.autoCheckResult ? '✅ Correct' : '❌ Incorrect';
+        statusEl.innerHTML = `Auto-check: <strong class="${resultClass}">${resultText}</strong><br>Waiting for host confirmation...`;
     }
     
-    // The server will still broadcast pack_complete when finished, keeping all clients in sync
+    // If host, update the UI to show the player's answer and auto-check
+    if (isHost) {
+        const answerReveal = document.querySelector('.question-answer-reveal');
+        if (answerReveal) {
+            const autoCheckClass = message.autoCheckResult ? 'correct-answer' : 'incorrect-answer';
+            const autoCheckText = message.autoCheckResult ? '✅ CORRECT' : '❌ INCORRECT';
+            answerReveal.innerHTML = `
+                <strong>Player answered:</strong> ${message.answer}
+                <br><strong>Auto-check:</strong> <span class="${autoCheckClass}">${autoCheckText}</span>
+                <br><strong>Correct answer:</strong> <span class="answer-highlight">${message.correctAnswer || 'N/A'}</span>
+            `;
+        }
+    }
 }
 
 // Host ends pack early
@@ -1022,17 +1089,18 @@ function startPackTimer() {
 function handlePackAnswerVerified(message) {
     console.log('Answer verified:', message);
     
-    if (!isHost) {
-        // Update score for non-host players
-        if (message.isCorrect) {
-            currentPackScore++;
-        }
-        currentPackQuestionIndex++;
-        
-        setTimeout(() => {
-            displayCurrentPackQuestion();
-        }, 500);
+    // Update score for all clients
+    if (message.isCorrect) {
+        currentPackScore++;
     }
+    
+    // Move to next question index
+    currentPackQuestionIndex++;
+    
+    // Display next question after a brief delay (for both host and players)
+    setTimeout(() => {
+        displayCurrentPackQuestion();
+    }, 500);
 }
 
 // Handle pack complete

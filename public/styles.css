@@ -1110,3 +1110,48 @@ body {
 .scores-table .winner-row td {
     color: #333;
 }
+
+/* Answer check result colors */
+.correct-answer {
+    color: #22c55e;
+}
+
+.incorrect-answer {
+    color: #ef4444;
+}
+
+.answer-highlight {
+    color: #667eea;
+    font-weight: bold;
+}
+
+/* Player answer section */
+.player-answer-section {
+    margin-top: 20px;
+}
+
+.answer-input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.answer-input {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.answer-input:focus {
+    border-color: #667eea;
+}
+
+.answer-status {
+    font-size: 14px;
+    margin-top: 5px;
+    color: #666;
+}

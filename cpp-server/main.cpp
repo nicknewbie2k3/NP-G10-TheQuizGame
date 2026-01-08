@@ -64,6 +64,9 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                 else if (type == "start_pack_questions") {
                     handleStartPackQuestions(wsi, ctx);
                 }
+                else if (type == "submit_pack_answer") {
+                    handleSubmitPackAnswer(wsi, msg["answer"], msg["questionIndex"], ctx);
+                }
                 else if (type == "pack_answer_verified") {
                     handlePackAnswerVerified(wsi, msg["isCorrect"], msg["questionIndex"], ctx);
                 }
