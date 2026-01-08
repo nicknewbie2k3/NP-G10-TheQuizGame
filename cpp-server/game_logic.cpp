@@ -273,8 +273,8 @@ void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerConte
     bool isCorrect = (answer == question.correctAnswer);
     
     if (isCorrect) {
-        player->roundScore += 100; // Base points
-        player->score += 100;
+        player->roundScore += 1; // Base points
+        player->score += 1;
     }
     
     game->answers[player->id] = answer;
@@ -1013,6 +1013,17 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
     packSelectedMsg["playerId"] = player->id;
     broadcastToGame(game->pin, packSelectedMsg.dump(), nullptr, ctx);
 
+    // Get player's current Round 2 score
+    int playerRound2Score = 0;
+    if (game->round2Scores.find(player->id) != game->round2Scores.end()) {
+        playerRound2Score = game->round2Scores[player->id];
+    }
+    std::cout << "📊 Player " << player->name << " (ID: " << player->id << ") current Round 2 score: " << playerRound2Score << std::endl;
+    std::cout << "📊 Total players in round2Scores map: " << game->round2Scores.size() << std::endl;
+    for (const auto& entry : game->round2Scores) {
+        std::cout << "   - Player ID " << entry.first << ": " << entry.second << " points" << std::endl;
+    }
+
     // Prepare full question payload (with answers) for host only
     json hostQuestionsMsg;
     hostQuestionsMsg["type"] = "pack_questions";
@@ -1020,6 +1031,7 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
     hostQuestionsMsg["questions"] = json::array();
     hostQuestionsMsg["timeLimit"] = 45; // 45 seconds total
     hostQuestionsMsg["currentPlayer"] = player->name;
+    hostQuestionsMsg["playerRound2Score"] = playerRound2Score;
 
     // Prepare sanitized payload (no answers) for players
     json playerQuestionsMsg = hostQuestionsMsg;
@@ -1079,12 +1091,20 @@ void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
     // Reset timer
     game->turnStartTime = std::chrono::steady_clock::now();
     
+    // Get player's current Round 2 score
+    int playerRound2Score = 0;
+    if (game->round2Scores.find(game->currentPackPlayerId) != game->round2Scores.end()) {
+        playerRound2Score = game->round2Scores[game->currentPackPlayerId];
+    }
+    std::cout << "📊 Pack started for player, current Round 2 score: " << playerRound2Score << std::endl;
+    
     // Build host payload with answers
     json hostQuestionsMsg;
     hostQuestionsMsg["type"] = "pack_questions";
     hostQuestionsMsg["packTitle"] = game->currentPack->title;
     hostQuestionsMsg["questions"] = json::array();
     hostQuestionsMsg["timeLimit"] = 45; // 45 seconds total
+    hostQuestionsMsg["playerRound2Score"] = playerRound2Score;
 
     // Build player payload without answers
     json playerQuestionsMsg = hostQuestionsMsg;
@@ -1183,6 +1203,7 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
         completeMsg["playerName"] = playerName;
         completeMsg["score"] = game->currentPackScore;
         completeMsg["totalQuestions"] = game->currentPack->questions.size();
+        completeMsg["totalRound2Score"] = game->round2Scores[game->currentPackPlayerId];
         broadcastToGame(game->pin, completeMsg.dump(), nullptr, ctx);
         
         // Reset pack state
@@ -1190,6 +1211,62 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
         game->currentPackScore = 0;
         game->currentPackPlayerId = "";
     }
+}
+
+void handleEndPackEarly(struct lws* wsi, ServerContext* ctx) {
+    std::cout << "🔍 handleEndPackEarly called" << std::endl;
+    
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) {
+        std::cout << "❌ Game not found in handleEndPackEarly" << std::endl;
+        return;
+    }
+    
+    // Prevent early end if game is finished
+    if (game->gameState == "finished") {
+        std::cout << "❌ Game is finished, cannot end pack early" << std::endl;
+        return;
+    }
+    
+    // Only host can end pack early
+    if (game->hostWsi != wsi) {
+        std::cout << "❌ Only host can end pack early" << std::endl;
+        return;
+    }
+    
+    if (!game->currentPack) {
+        std::cout << "❌ No pack currently active" << std::endl;
+        return;
+    }
+    
+    std::cout << "⏹️ Host ending pack early. Current score: " << game->currentPackScore << std::endl;
+    
+    // Find current player and add score to their Round 2 total
+    auto player = findPlayerById(game, game->currentPackPlayerId);
+    std::string playerName = player ? player->name : "Player";
+    
+    // Add to player's Round 2 score
+    if (game->round2Scores.find(game->currentPackPlayerId) == game->round2Scores.end()) {
+        game->round2Scores[game->currentPackPlayerId] = 0;
+    }
+    game->round2Scores[game->currentPackPlayerId] += game->currentPackScore;
+    
+    std::cout << "📊 " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
+    
+    // Broadcast pack completion (even though not all questions answered)
+    json completeMsg;
+    completeMsg["type"] = "pack_complete";
+    completeMsg["playerName"] = playerName;
+    completeMsg["score"] = game->currentPackScore;
+    completeMsg["totalQuestions"] = game->currentPack->questions.size();
+    completeMsg["totalRound2Score"] = game->round2Scores[game->currentPackPlayerId];
+    completeMsg["endedEarly"] = true;
+    broadcastToGame(game->pin, completeMsg.dump(), nullptr, ctx);
+    
+    // Reset pack state
+    game->currentPack = nullptr;
+    game->currentPackScore = 0;
+    game->currentPackPlayerId = "";
 }
 
 void handleEndTurn(struct lws* wsi, ServerContext* ctx) {

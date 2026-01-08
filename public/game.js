@@ -820,6 +820,7 @@ let currentPackQuestions = [];
 let currentPackQuestionIndex = 0;
 let currentPackScore = 0;
 let currentPackPlayer = '';
+let playerRound2Score = 0;  // Player's total Round 2 score
 
 // Handle pack questions display
 function handlePackQuestions(message) {
@@ -835,6 +836,7 @@ function handlePackQuestions(message) {
     currentPackQuestionIndex = 0;
     currentPackScore = 0;
     currentPackPlayer = message.currentPlayer || 'Player';
+    playerRound2Score = message.playerRound2Score || 0;  // Store the player's total Round 2 score
     
     showScreen('pack-questions-screen');
     displayCurrentPackQuestion();
@@ -872,8 +874,17 @@ function displayCurrentPackQuestion() {
     // Score and timer row
     html += '<div class="pack-status-row">';
     html += `<div class="pack-score">`;
-    html += `<div class="score-label">Score:</div>`;
-    html += `<div class="score-value">${currentPackScore}</div>`;
+    if (isHost) {
+        // Show host the player's total Round 2 score
+        const runningTotal = playerRound2Score + currentPackScore;
+        html += `<div class="score-label">Round 2 Total:</div>`;
+        html += `<div class="score-value">${runningTotal}</div>`;
+    } else {
+        // Show player their total Round 2 score: previous packs + current pack progress
+        const runningTotal = playerRound2Score + currentPackScore;
+        html += `<div class="score-label">Round 2 Total:</div>`;
+        html += `<div class="score-value">${runningTotal}</div>`;
+    }
     html += `</div>`;
     html += `<div class="pack-timer" id="pack-timer">`;
     html += `<div class="timer-label">Time:</div>`;
@@ -881,9 +892,9 @@ function displayCurrentPackQuestion() {
     html += `</div>`;
     html += '</div>';
     
-    // Question progress
+    // Question progress (no total shown)
     html += `<div class="question-progress">`;
-    html += `Question ${currentPackQuestionIndex + 1} of ${currentPackQuestions.length}`;
+    html += `Question ${currentPackQuestionIndex + 1}`;
     html += `</div>`;
     
     // Current question
@@ -902,6 +913,9 @@ function displayCurrentPackQuestion() {
         html += '<div class="host-verification-buttons">';
         html += '<button class="btn btn-success btn-large verify-btn" data-correct="true">✅ Correct (+1)</button>';
         html += '<button class="btn btn-danger btn-large verify-btn" data-correct="false">❌ Incorrect (+0)</button>';
+        html += '</div>';
+        html += '<div class="host-end-turn-section">';
+        html += '<button class="btn btn-warning btn-large end-pack-early-btn">⏹️ End Turn Early</button>';
         html += '</div>';
     } else {
         html += '<div class="player-waiting">';
@@ -922,6 +936,11 @@ function displayCurrentPackQuestion() {
                 verifyAnswer(isCorrect);
             });
         });
+        
+        const endEarlyBtn = document.querySelector('.end-pack-early-btn');
+        if (endEarlyBtn) {
+            endEarlyBtn.addEventListener('click', endPackEarly);
+        }
     }
 }
 
@@ -951,6 +970,26 @@ function verifyAnswer(isCorrect) {
     
     // The server will still broadcast pack_complete when finished, keeping all clients in sync
 }
+
+// Host ends pack early
+function endPackEarly() {
+    console.log('🛑 Host ending pack early');
+    console.log('Current pack score:', currentPackScore);
+    console.log('Current question:', currentPackQuestionIndex + 1);
+    
+    if (packTimer) {
+        clearInterval(packTimer);
+    }
+    
+    // Send to server to finalize the pack with current score
+    const msg = {
+        type: 'end_pack_early'
+    };
+    console.log('📤 Sending end_pack_early message:', msg);
+    sendMessage(msg);
+    console.log('✅ Message sent to server');
+}
+
 
 // Start the pack timer
 function startPackTimer() {
@@ -998,17 +1037,27 @@ function handlePackAnswerVerified(message) {
 
 // Handle pack complete
 function handlePackComplete(message) {
-    console.log('Pack complete:', message);
+    console.log('🎉 Pack complete handler called:', message);
+    console.log('Current isHost:', isHost);
+    console.log('Current screen before pack complete:', document.querySelector('.screen.active')?.id);
     
     if (packTimer) {
+        console.log('Clearing packTimer');
         clearInterval(packTimer);
     }
     
     const content = document.getElementById('pack-questions-content');
+    console.log('pack-questions-content element found:', !!content);
+    if (!content) {
+        console.error('ERROR: pack-questions-content element not found!');
+        return;
+    }
+    
     let html = '<div class="pack-complete-container">';
     html += `<h2>✅ Pack Complete!</h2>`;
     html += `<p class="pack-player">${message.playerName || currentPackPlayer}</p>`;
-    html += `<p class="final-score">Final Score: ${message.score || currentPackScore}</p>`;
+    const totalRound2Score = message.totalRound2Score !== undefined ? message.totalRound2Score : (message.score || currentPackScore);
+    html += `<p class="final-score">Round 2 Total: ${totalRound2Score}</p>`;
     
     html += '<div class="button-group">';
     if (isHost) {
@@ -1019,7 +1068,10 @@ function handlePackComplete(message) {
     html += '</div>';
     
     html += '</div>';
+    console.log('Generated HTML:', html);
     content.innerHTML = html;
+    console.log('✅ Content innerHTML updated');
+    console.log('Content element after update:', content.innerHTML);
     
     // Add event listener for next turn button
     if (isHost) {
