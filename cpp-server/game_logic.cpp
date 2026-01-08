@@ -594,6 +594,46 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         if (game->isSpeedOrderPhase) {
             std::cout << "📋 Speed order question complete, showing results and player order (NO elimination)..." << std::endl;
             
+            // Re-order activePlayers based on speed order results
+            // Correct answers first (sorted by time), then incorrect answers (sorted by time)
+            std::vector<std::shared_ptr<Player>> reorderedPlayers;
+            
+            // Add correct players first (sorted by response time)
+            for (const auto& response : sortedResponses) {
+                const auto& playerId = response.first;
+                const auto& answer = response.second.first;
+                
+                if (answer == correctAnswer) {
+                    auto player = findPlayerById(game, playerId);
+                    if (player) {
+                        reorderedPlayers.push_back(player);
+                        std::cout << "✅ Correct: " << player->name << " (" << response.second.second << "ms)" << std::endl;
+                    }
+                }
+            }
+            
+            // Add incorrect players next (sorted by response time)
+            for (const auto& response : sortedResponses) {
+                const auto& playerId = response.first;
+                const auto& answer = response.second.first;
+                
+                if (answer != correctAnswer) {
+                    auto player = findPlayerById(game, playerId);
+                    if (player) {
+                        reorderedPlayers.push_back(player);
+                        std::cout << "❌ Incorrect: " << player->name << " (" << response.second.second << "ms)" << std::endl;
+                    }
+                }
+            }
+            
+            // Update activePlayers with the new order
+            game->activePlayers = reorderedPlayers;
+            
+            std::cout << "📋 Player order for Round 2 determined:" << std::endl;
+            for (size_t i = 0; i < game->activePlayers.size(); i++) {
+                std::cout << "  " << (i+1) << ". " << game->activePlayers[i]->name << std::endl;
+            }
+            
             // Send speed results without elimination
             broadcastToGame(game->pin, results.dump(), nullptr, ctx);
             
@@ -921,6 +961,15 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;
     
+    // Prevent pack selection if game is finished
+    if (game->gameState == "finished") {
+        json error;
+        error["type"] = "error";
+        error["message"] = "Game is finished";
+        sendToClient(wsi, error.dump());
+        return;
+    }
+    
     auto player = findPlayerByWsi(game, wsi);
     if (!player) return;
     
@@ -963,14 +1012,18 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
     packSelectedMsg["playerName"] = player->name;
     packSelectedMsg["playerId"] = player->id;
     broadcastToGame(game->pin, packSelectedMsg.dump(), nullptr, ctx);
-    
-    // Send all pack questions to the game immediately
-    json questionsMsg;
-    questionsMsg["type"] = "pack_questions";
-    questionsMsg["packTitle"] = packIt->title;
-    questionsMsg["questions"] = json::array();
-    questionsMsg["timeLimit"] = 45; // 45 seconds total
-    questionsMsg["currentPlayer"] = player->name;
+
+    // Prepare full question payload (with answers) for host only
+    json hostQuestionsMsg;
+    hostQuestionsMsg["type"] = "pack_questions";
+    hostQuestionsMsg["packTitle"] = packIt->title;
+    hostQuestionsMsg["questions"] = json::array();
+    hostQuestionsMsg["timeLimit"] = 45; // 45 seconds total
+    hostQuestionsMsg["currentPlayer"] = player->name;
+
+    // Prepare sanitized payload (no answers) for players
+    json playerQuestionsMsg = hostQuestionsMsg;
+    playerQuestionsMsg["questions"] = json::array();
     
     // Read the pack data from JSON to get answers
     std::ifstream packFile("questions/round2-question-packs.json");
@@ -983,18 +1036,27 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
             if (jsonPack["id"] == packId) {
                 // Use questions from JSON which have the answer field
                 for (const auto& q : jsonPack["questions"]) {
-                    json questionData;
-                    questionData["id"] = q["id"];
-                    questionData["text"] = q["text"];
-                    questionData["answer"] = q["answer"];
-                    questionsMsg["questions"].push_back(questionData);
+                    json questionDataWithAnswer;
+                    questionDataWithAnswer["id"] = q["id"];
+                    questionDataWithAnswer["text"] = q["text"];
+                    questionDataWithAnswer["answer"] = q["answer"];
+                    hostQuestionsMsg["questions"].push_back(questionDataWithAnswer);
+
+                    json questionDataNoAnswer;
+                    questionDataNoAnswer["id"] = q["id"];
+                    questionDataNoAnswer["text"] = q["text"];
+                    playerQuestionsMsg["questions"].push_back(questionDataNoAnswer);
                 }
                 break;
             }
         }
     }
-    
-    broadcastToGame(game->pin, questionsMsg.dump(), nullptr, ctx);
+
+    // Send answers only to host; sanitized to everyone else
+    if (game->hostWsi) {
+        sendToClient(game->hostWsi, hostQuestionsMsg.dump());
+    }
+    broadcastToGame(game->pin, playerQuestionsMsg.dump(), game->hostWsi, ctx);
 }
 
 void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
@@ -1017,12 +1079,25 @@ void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
     // Reset timer
     game->turnStartTime = std::chrono::steady_clock::now();
     
-    // Send all pack questions to the game
-    json questionsMsg;
-    questionsMsg["type"] = "pack_questions";
-    questionsMsg["packTitle"] = game->currentPack->title;
-    questionsMsg["questions"] = json::array();
-    questionsMsg["timeLimit"] = 45; // 45 seconds total
+    // Build host payload with answers
+    json hostQuestionsMsg;
+    hostQuestionsMsg["type"] = "pack_questions";
+    hostQuestionsMsg["packTitle"] = game->currentPack->title;
+    hostQuestionsMsg["questions"] = json::array();
+    hostQuestionsMsg["timeLimit"] = 45; // 45 seconds total
+
+    // Build player payload without answers
+    json playerQuestionsMsg = hostQuestionsMsg;
+    playerQuestionsMsg["questions"] = json::array();
+    std::string currentPackPlayerName = "Player";
+    if (!game->currentPackPlayerId.empty()) {
+        auto currentPlayerPtr = findPlayerById(game, game->currentPackPlayerId);
+        if (currentPlayerPtr) {
+            currentPackPlayerName = currentPlayerPtr->name;
+        }
+    }
+    playerQuestionsMsg["currentPlayer"] = currentPackPlayerName;
+    hostQuestionsMsg["currentPlayer"] = currentPackPlayerName;
     
     // Read the pack data from JSON to get answers
     std::ifstream packFile("questions/round2-question-packs.json");
@@ -1035,23 +1110,36 @@ void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
             if (jsonPack["id"] == game->currentPack->id) {
                 // Use questions from JSON which have the answer field
                 for (const auto& q : jsonPack["questions"]) {
-                    json questionData;
-                    questionData["id"] = q["id"];
-                    questionData["text"] = q["text"];
-                    questionData["answer"] = q["answer"];
-                    questionsMsg["questions"].push_back(questionData);
+                    json questionDataWithAnswer;
+                    questionDataWithAnswer["id"] = q["id"];
+                    questionDataWithAnswer["text"] = q["text"];
+                    questionDataWithAnswer["answer"] = q["answer"];
+                    hostQuestionsMsg["questions"].push_back(questionDataWithAnswer);
+
+                    json questionDataNoAnswer;
+                    questionDataNoAnswer["id"] = q["id"];
+                    questionDataNoAnswer["text"] = q["text"];
+                    playerQuestionsMsg["questions"].push_back(questionDataNoAnswer);
                 }
                 break;
             }
         }
     }
     
-    broadcastToGame(game->pin, questionsMsg.dump(), nullptr, ctx);
+    if (game->hostWsi) {
+        sendToClient(game->hostWsi, hostQuestionsMsg.dump());
+    }
+    broadcastToGame(game->pin, playerQuestionsMsg.dump(), game->hostWsi, ctx);
 }
 
 void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex, ServerContext* ctx) {
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;
+    
+    // Prevent answer verification if game is finished
+    if (game->gameState == "finished") {
+        return;
+    }
     
     // Only host can verify answers
     if (game->hostWsi != wsi) return;
@@ -1113,6 +1201,12 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
         return;
     }
     
+    // Prevent ending turn if game is finished
+    if (game->gameState == "finished") {
+        std::cout << "❌ Cannot end turn - game is finished" << std::endl;
+        return;
+    }
+    
     // Only host can end turn
     if (game->hostWsi != wsi) {
         std::cout << "❌ Only host can end turn" << std::endl;
@@ -1131,6 +1225,9 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
     
     if (game->round2TurnsCompleted >= totalTurnsNeeded) {
         std::cout << "🏁 Round 2 complete! Calculating winners..." << std::endl;
+        
+        // Set game state to finished
+        game->gameState = "finished";
         
         // Find highest score
         int highestScore = 0;

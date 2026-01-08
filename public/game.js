@@ -889,9 +889,12 @@ function displayCurrentPackQuestion() {
     // Current question
     html += '<div class="current-question-display">';
     html += `<div class="question-text-large">${question.text}</div>`;
-    html += `<div class="question-answer-reveal">`;
-    html += `<strong>Answer:</strong> <span class="answer-highlight">${question.answer}</span>`;
-    html += `</div>`;
+    // Only the host should see the answer reveal
+    if (isHost && question.answer) {
+        html += `<div class="question-answer-reveal">`;
+        html += `<strong>Answer:</strong> <span class="answer-highlight">${question.answer}</span>`;
+        html += `</div>`;
+    }
     html += '</div>';
     
     // Host controls
@@ -938,11 +941,15 @@ function verifyAnswer(isCorrect) {
         questionIndex: currentPackQuestionIndex
     });
     
-    // Move to next question
+    // Move to next question locally so host UI advances immediately
     currentPackQuestionIndex++;
+
+    // If more questions remain, show the next one right away for host
+    if (currentPackQuestionIndex < currentPackQuestions.length) {
+        displayCurrentPackQuestion();
+    }
     
-    // Don't show next question - wait for server to send pack_complete or pack_answer_verified
-    // The server will handle progression and broadcast to all players
+    // The server will still broadcast pack_complete when finished, keeping all clients in sync
 }
 
 // Start the pack timer
