@@ -8,6 +8,9 @@ let currentQuestion = null;
 let players = [];
 let playerEliminated = false;
 let gameLog = []; // Store game events for logging
+let isPackCompleteScreenShowing = false; // Flag to prevent screen switching while pack complete is displayed
+let pendingPacksMessage = null; // Store pending round2_packs_available message to process after pack-complete
+let gameEnded = false; // Flag to track if game ended normally (not a disconnect error)
 
 // Connect to WebSocket server
 function connectWebSocket() {
@@ -34,7 +37,10 @@ function connectWebSocket() {
     
     ws.onclose = () => {
         console.log('🔌 Disconnected from server');
-        showError('Disconnected from server');
+        // Only show error if game hasn't ended normally
+        if (!gameEnded) {
+            showError('Disconnected from server');
+        }
     };
 }
 
@@ -168,6 +174,7 @@ function showHostGame() {
 function leaveGame() {
     if (confirm('Are you sure you want to leave the game? You will be eliminated.')) {
         console.log('Player leaving game...');
+        gameEnded = true; // Mark game as intentionally ended
         sendMessage({ type: 'leave_game' });
         
         // Show left game screen
@@ -683,6 +690,27 @@ function handleRound2PacksAvailable(message) {
     console.log('Current turn index from server:', message.currentTurnIndex);
     console.log('Local turn index before update:', round2CurrentTurnIndex);
     
+    // If pack-complete screen is showing:
+    // - On host: store message to process after Next Player button is clicked
+    // - On non-host: clear flag and process immediately (they're just waiting)
+    if (isPackCompleteScreenShowing) {
+        if (isHost) {
+            console.log('⚠️ Host: Pack complete screen is showing - storing message for later processing');
+            pendingPacksMessage = message;
+            return;
+        } else {
+            console.log('⚠️ Player: Pack complete screen is showing - clearing flag and processing message');
+            isPackCompleteScreenShowing = false;
+            pendingPacksMessage = null;
+        }
+    }
+    
+    // Process the packs message
+    processPacksMessage(message);
+}
+
+// Process the packs message (separated from handler to allow deferred execution)
+function processPacksMessage(message) {
     const content = document.getElementById('round2-packs-content');
     
     // Update selected packs from server data
@@ -887,12 +915,48 @@ function displayCurrentPackQuestion() {
     const content = document.getElementById('pack-questions-content');
     
     if (currentPackQuestionIndex >= currentPackQuestions.length) {
-        // All questions answered
+        // All questions answered - set flag to prevent screen switches
+        isPackCompleteScreenShowing = true;
+        pendingPacksMessage = null;
+        
+        // All questions answered - show complete screen with Next Player button
+        const totalScore = playerRound2Score + currentPackScore;
         let html = '<div class="pack-complete-container">';
         html += `<h2>✅ Pack Complete!</h2>`;
-        html += `<p class="final-score">Final Score: ${currentPackScore}/${currentPackQuestions.length}</p>`;
+        html += `<p class="final-score">Round 2 Total: ${totalScore}</p>`;
+        
+        html += '<div class="button-group">';
+        if (isHost) {
+            html += '<button class="btn btn-primary btn-large next-turn-btn">Next Player →</button>';
+        } else {
+            html += '<button class="btn btn-secondary btn-large" disabled>Waiting for host...</button>';
+        }
+        html += '</div>';
+        
         html += '</div>';
         content.innerHTML = html;
+        
+        // Add event listener for next turn button if host
+        if (isHost) {
+            const nextBtn = document.querySelector('.next-turn-btn');
+            if (nextBtn) {
+                console.log('Adding click listener to Next Player button from displayCurrentPackQuestion');
+                nextBtn.addEventListener('click', function() {
+                    console.log('Next Player button clicked from displayCurrentPackQuestion!');
+                    isPackCompleteScreenShowing = false;
+                    
+                    // If there's a pending packs message, process it now
+                    if (pendingPacksMessage) {
+                        console.log('Processing pending packs message');
+                        const msg = pendingPacksMessage;
+                        pendingPacksMessage = null;
+                        processPacksMessage(msg);
+                    }
+                    
+                    endTurn();
+                });
+            }
+        }
         
         if (packTimer) {
             clearInterval(packTimer);
@@ -1146,16 +1210,18 @@ function handlePackAnswerVerified(message) {
 // Handle pack complete
 function handlePackComplete(message) {
     console.log('🎉 Pack complete handler called:', message);
+    
     console.log('Current isHost:', isHost);
-    console.log('Current screen before pack complete:', document.querySelector('.screen.active')?.id);
     
     if (packTimer) {
         console.log('Clearing packTimer');
         clearInterval(packTimer);
     }
     
+    // Set flag to prevent screen switching while pack complete is displayed
+    isPackCompleteScreenShowing = true;
+    
     const content = document.getElementById('pack-questions-content');
-    console.log('pack-questions-content element found:', !!content);
     if (!content) {
         console.error('ERROR: pack-questions-content element not found!');
         return;
@@ -1179,7 +1245,6 @@ function handlePackComplete(message) {
     console.log('Generated HTML:', html);
     content.innerHTML = html;
     console.log('✅ Content innerHTML updated');
-    console.log('Content element after update:', content.innerHTML);
     
     // Add event listener for next turn button
     if (isHost) {
@@ -1188,6 +1253,16 @@ function handlePackComplete(message) {
             console.log('Adding click listener to Next Player button');
             nextBtn.addEventListener('click', function() {
                 console.log('Next Player button clicked!');
+                isPackCompleteScreenShowing = false;
+                
+                // If there's a pending packs message, process it now
+                if (pendingPacksMessage) {
+                    console.log('Processing pending packs message');
+                    const msg = pendingPacksMessage;
+                    pendingPacksMessage = null;
+                    processPacksMessage(msg);
+                }
+                
                 endTurn();
             });
         } else {
@@ -1219,6 +1294,9 @@ function handleTurnEnded(message) {
 // Handle game over with winners
 function handleGameOver(message) {
     console.log('Game Over!', message);
+    
+    // Mark game as ended normally
+    gameEnded = true;
     
     const content = document.getElementById('final-results');
     
@@ -1383,6 +1461,7 @@ function showScreen(screenId) {
 
 // Show landing
 function showLanding() {
+    gameEnded = true; // Mark game as intentionally ended
     isHost = false;
     currentGamePin = null;
     playerId = null;
