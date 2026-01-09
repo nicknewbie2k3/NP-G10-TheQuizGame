@@ -32,53 +32,53 @@ $(BUILD_DIR):
 
 # Build game server
 $(GAME_SERVER): $(GAME_SERVER_SOURCES) $(SRC_DIR)/game_server.h
-	@echo "🔨 Building WebSocket Game Server..."
+	@echo " Building WebSocket Game Server..."
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(GAME_SERVER_SOURCES) -o $(GAME_SERVER) $(LIBS)
-	@echo "✅ Game server built successfully!"
+	@echo " Game server built successfully!"
 
 # Build HTTP server
 $(HTTP_SERVER): $(HTTP_SERVER_SOURCES)
-	@echo "🔨 Building HTTP Server..."
+	@echo " Building HTTP Server..."
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(HTTP_SERVER_SOURCES) -o $(HTTP_SERVER) $(LIBS)
-	@echo "✅ HTTP server built successfully!"
+	@echo " HTTP server built successfully!"
 
 # Copy question files
 copy-questions:
-	@echo "📚 Copying question files..."
+	@echo " Copying question files..."
 	@mkdir -p $(BUILD_DIR)/questions
 	@if [ -d "websocket-bridge/questions" ]; then \
 		cp websocket-bridge/questions/*.json $(BUILD_DIR)/questions/ 2>/dev/null || true; \
 	fi
-	@echo "✅ Question files copied!"
+	@echo " Question files copied!"
 
 # Copy public files
 copy-public:
-	@echo "🌐 Copying public web files..."
+	@echo " Copying public web files..."
 	@mkdir -p $(BUILD_DIR)/public
 	@if [ -d "$(PUBLIC_DIR)" ]; then \
 		cp -r $(PUBLIC_DIR)/* $(BUILD_DIR)/public/; \
 	fi
-	@echo "✅ Public files copied!"
+	@echo " Public files copied!"
 
 # Run game server
 run-game: $(GAME_SERVER) copy-questions
-	@echo "🚀 Starting WebSocket Game Server on port 8080..."
+	@echo " Starting WebSocket Game Server on port 8080..."
 	@cd $(BUILD_DIR) && ./game_server
 
 # Run HTTP server
 run-http: $(HTTP_SERVER) copy-public
-	@echo "🌐 Starting HTTP Server on port 3001..."
+	@echo " Starting HTTP Server on port 3001..."
 	@cd $(BUILD_DIR) && ./http_server
 
 # Clean build artifacts
 clean:
-	@echo "🧹 Cleaning build artifacts..."
+	@echo " Cleaning build artifacts..."
 	rm -rf $(BUILD_DIR)
-	@echo "✅ Clean complete!"
+	@echo " Clean complete!"
 
 # Install dependencies (Ubuntu/Debian)
 install-deps:
-	@echo "📦 Installing dependencies..."
+	@echo " Installing dependencies..."
 	@echo "Note: This requires sudo privileges"
 	sudo apt-get update
 	sudo apt-get install -y \
@@ -86,11 +86,11 @@ install-deps:
 		cmake \
 		libwebsockets-dev \
 		nlohmann-json3-dev
-	@echo "✅ Dependencies installed!"
+	@echo " Dependencies installed!"
 
 # Help
 help:
-	@echo "📖 Quiz Game C++ Server - Build Commands"
+	@echo " Quiz Game C++ Server - Build Commands"
 	@echo ""
 	@echo "Available targets:"
 	@echo "  make all          - Build both servers (default)"
@@ -101,13 +101,14 @@ help:
 	@echo "  make clean        - Remove build artifacts"
 	@echo "  make install-deps - Install required dependencies (Ubuntu/Debian)"
 	@echo ""
-	@echo "📦 Required libraries:"
+	@echo " Required libraries:"
 	@echo "  - libwebsockets"
 	@echo "  - nlohmann-json"
 	@echo ""
-	@echo "🚀 Quick start:"
+	@echo " Quick start:"
 	@echo "  1. make install-deps  (first time only)"
 	@echo "  2. make all"
 	@echo "  3. In terminal 1: make run-game"
 	@echo "  4. In terminal 2: make run-http"
 	@echo "  5. Open browser: http://localhost:3001"
+

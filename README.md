@@ -3,9 +3,9 @@ Network Programming Project of Group 10.
 
 A multiplayer quiz game with **3-round elimination system** and real-time gameplay featuring a **pure C++** implementation with WebSocket server and web-based frontend.
 
-> **📌 Important**: This project has been converted to pure C++. See [CONVERSION_SUMMARY.md](docs/CONVERSION_SUMMARY.md) for details.
+> ** Important**: This project has been converted to pure C++. See [CONVERSION_SUMMARY.md](docs/CONVERSION_SUMMARY.md) for details.
 
-## 🎮 Project Overview
+##  Project Overview
 
 This project is a complete **C++ implementation** of a multiplayer quiz game with real-time gameplay:
 
@@ -15,21 +15,21 @@ This project is a complete **C++ implementation** of a multiplayer quiz game wit
 - **HTTP Server**: C++ static file server for web interface
 - **Gameplay**: 3-round elimination tournament with PIN-based room system
 
-**📌 100% C/C++ Implementation** - No Node.js, no React, no external frameworks required!
+** 100% C/C++ Implementation** - No Node.js, no React, no external frameworks required!
 
-## 🏆 Elimination System
+##  Elimination System
 
 **Tournament Structure**:
-- **Round 1**: All players (4+) compete → Lowest scorer eliminated
-- **Round 2**: Remaining players → Another elimination  
-- **Round 3**: Final 2 players → Winner determined
+- **Round 1**: All players (4+) compete  Lowest scorer eliminated
+- **Round 2**: Remaining players  Another elimination  
+- **Round 3**: Final 2 players  Winner determined
 
 **Player Experience**:
-- ✅ **Active players**: See questions and round progress
-- ❌ **Eliminated players**: Get elimination screen + spectator mode
-- 🍿 **Spectator mode**: Watch remaining players compete
+-  **Active players**: See questions and round progress
+-  **Eliminated players**: Get elimination screen + spectator mode
+-  **Spectator mode**: Watch remaining players compete
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - **Linux/macOS**: GCC/Clang with C++17 support
@@ -37,7 +37,7 @@ This project is a complete **C++ implementation** of a multiplayer quiz game wit
 - **libwebsockets**: WebSocket library
 - **nlohmann-json**: JSON parsing library (header-only)
 
-> **💡 Windows Users**: Use WSL for best Linux compatibility.
+> ** Windows Users**: Use WSL for best Linux compatibility.
 
 ### Installation & Setup (Complete Guide)
 
@@ -97,12 +97,12 @@ wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/path/to/NP-G10-TheQuizGame/build && no
 
 1. Open your browser to **`http://localhost:3001`**
 2. **Host's Actions**:
-   - Click "🎮 Host a Game"
+   - Click " Host a Game"
    - Share the PIN with other players
    - Wait for players to join
-   - Click "🚀 Start Game" (minimum 2 players)
+   - Click " Start Game" (minimum 2 players)
 3. **Players' Actions**:
-   - Click "👥 Join Game"
+   - Click " Join Game"
    - Enter the PIN and your name
    - Wait for host to start
 4. **Play**:
@@ -149,50 +149,50 @@ lsof -i :8080  # or :3001
 kill -9 <PID>
 ```
 
-## � Project Structure
+##  Project Structure
 
 ```
 NP-G10-TheQuizGame/
-├── cpp-server/              # C++ server implementation ✅
-│   ├── main.cpp            # WebSocket game server
-│   ├── game_logic.cpp      # Game state management
-│   ├── json_loader.cpp     # Question loader
-│   ├── http_server.cpp     # HTTP static file server
-│   └── game_server.h       # Header file
-│
-├── public/                  # Vanilla JS frontend ✅
-│   ├── index.html          # Main HTML
-│   ├── game.js             # Client logic
-│   └── styles.css          # Styling
-│
-├── websocket-bridge/
-│   └── questions/          # Question JSON files ✅
-│       ├── round1-questions.json
-│       ├── round2-question-packs.json
-│       └── speed-questions.json
-│
-├── build/                   # Build output (generated)
-│   ├── game_server         # Compiled WebSocket server
-│   ├── http_server         # Compiled HTTP server
-│   ├── questions/          # Copied from websocket-bridge/questions/
-│   └── public/             # Copied from public/
-│
-├── docs/                    # Documentation
-├── CMakeLists.txt          # CMake build config
-├── Makefile.cpp            # Make build config
-└── build.ps1               # Windows build script
+ cpp-server/              # C++ server implementation 
+    main.cpp            # WebSocket game server
+    game_logic.cpp      # Game state management
+    json_loader.cpp     # Question loader
+    http_server.cpp     # HTTP static file server
+    game_server.h       # Header file
+
+ public/                  # Vanilla JS frontend 
+    index.html          # Main HTML
+    game.js             # Client logic
+    styles.css          # Styling
+
+ websocket-bridge/
+    questions/          # Question JSON files 
+        round1-questions.json
+        round2-question-packs.json
+        speed-questions.json
+
+ build/                   # Build output (generated)
+    game_server         # Compiled WebSocket server
+    http_server         # Compiled HTTP server
+    questions/          # Copied from websocket-bridge/questions/
+    public/             # Copied from public/
+
+ docs/                    # Documentation
+ CMakeLists.txt          # CMake build config
+ Makefile.cpp            # Make build config
+ build.ps1               # Windows build script
 ```
 
-## 📝 Customizing Questions
+##  Customizing Questions
 
 The game loads questions from JSON configuration files. No code changes needed!
 
 ### Question Files Location
 ```
 websocket-bridge/questions/   # Edit these source files
-├── round1-questions.json     # Round 1 multiple choice questions
-├── round2-question-packs.json # Round 2 question packs for turn-based play  
-└── speed-questions.json      # Speed questions for turn order determination
+ round1-questions.json     # Round 1 multiple choice questions
+ round2-question-packs.json # Round 2 question packs for turn-based play  
+ speed-questions.json      # Speed questions for turn order determination
 ```
 
 Questions are automatically copied to `build/questions/` during compilation.
@@ -224,7 +224,7 @@ Edit `round2-question-packs.json`:
 [
   {
     "id": "pack1",
-    "title": "🌍 Geography Masters",
+    "title": " Geography Masters",
     "description": "World capitals, countries, and landmarks",
     "questions": [
       {
@@ -248,14 +248,14 @@ make -f Makefile.cpp copy-questions
 # Or just rebuild: make -f Makefile.cpp all
 ```
 
-## 📚 Documentation
+##  Documentation
 
 - **[CPP_IMPLEMENTATION.md](docs/CPP_IMPLEMENTATION.md)** - Complete architecture and implementation details
 - **[WINDOWS_BUILD.md](docs/WINDOWS_BUILD.md)** - Windows-specific build instructions with PowerShell scripts
 - **[MIGRATION_GUIDE.md](docs/MIGRATION_GUIDE.md)** - Guide for converting from Node.js/React to C++
 - **[FRAMEWORK.md](docs/FRAMEWORK.md)** - Original TCP framework documentation
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Backend (C++)
 - **libwebsockets** - WebSocket protocol implementation
@@ -269,70 +269,70 @@ make -f Makefile.cpp copy-questions
 - **Vanilla JavaScript** - No frameworks (React/Vue/Angular)
 - **WebSocket API** - Native browser WebSocket support
 
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 NP-G10-TheQuizGame/
-├── cpp-server/              # C++ server implementation
-│   ├── game_server.h       # Game structures and declarations
-│   ├── main.cpp            # WebSocket server entry point
-│   ├── game_logic.cpp      # Game state and message handlers
-│   ├── json_loader.cpp     # JSON question file loader
-│   ├── http_server.cpp     # HTTP static file server
-│   └── json.hpp            # nlohmann/json library
-│
-├── public/                  # Web frontend
-│   ├── index.html          # Single-page application
-│   ├── styles.css          # Game styling
-│   └── game.js             # Client-side game logic
-│
-├── websocket-bridge/questions/  # Question data
-│   ├── round1-questions.json
-│   ├── round2-question-packs.json
-│   └── speed-questions.json
-│
-├── build/                   # Build output (generated)
-│   ├── game_server         # WebSocket server binary
-│   ├── http_server         # HTTP server binary
-│   ├── questions/          # Copied question files
-│   └── public/             # Copied web files
-│
-├── docs/                    # Documentation
-│   ├── CPP_IMPLEMENTATION.md
-│   ├── WINDOWS_BUILD.md
-│   ├── MIGRATION_GUIDE.md
-│   └── FRAMEWORK.md
-│
-├── CMakeLists.txt          # CMake build configuration
-├── Makefile.cpp            # GNU Make build file
-└── README.md               # This file
+ cpp-server/              # C++ server implementation
+    game_server.h       # Game structures and declarations
+    main.cpp            # WebSocket server entry point
+    game_logic.cpp      # Game state and message handlers
+    json_loader.cpp     # JSON question file loader
+    http_server.cpp     # HTTP static file server
+    json.hpp            # nlohmann/json library
+
+ public/                  # Web frontend
+    index.html          # Single-page application
+    styles.css          # Game styling
+    game.js             # Client-side game logic
+
+ websocket-bridge/questions/  # Question data
+    round1-questions.json
+    round2-question-packs.json
+    speed-questions.json
+
+ build/                   # Build output (generated)
+    game_server         # WebSocket server binary
+    http_server         # HTTP server binary
+    questions/          # Copied question files
+    public/             # Copied web files
+
+ docs/                    # Documentation
+    CPP_IMPLEMENTATION.md
+    WINDOWS_BUILD.md
+    MIGRATION_GUIDE.md
+    FRAMEWORK.md
+
+ CMakeLists.txt          # CMake build configuration
+ Makefile.cpp            # GNU Make build file
+ README.md               # This file
 ```
 
-## 🎯 Features
+##  Features
 
-### Implemented ✅
-- ✅ WebSocket-based real-time communication
-- ✅ PIN-based game rooms
-- ✅ Multiple concurrent games
-- ✅ Player join/disconnect handling
-- ✅ Round 1: Multiple choice questions
-- ✅ Round 2: Turn-based question packs
-- ✅ Elimination system
-- ✅ Score tracking
-- ✅ Question timer
-- ✅ Dynamic question loading from JSON
-- ✅ Responsive web interface
-- ✅ Host controls (start, next, end game)
+### Implemented 
+-  WebSocket-based real-time communication
+-  PIN-based game rooms
+-  Multiple concurrent games
+-  Player join/disconnect handling
+-  Round 1: Multiple choice questions
+-  Round 2: Turn-based question packs
+-  Elimination system
+-  Score tracking
+-  Question timer
+-  Dynamic question loading from JSON
+-  Responsive web interface
+-  Host controls (start, next, end game)
 
-### Planned Enhancements 🚧
-- 🚧 SSL/TLS support (wss://)
-- 🚧 Persistent leaderboards (SQLite)
-- 🚧 Player authentication
-- 🚧 Admin panel
-- 🚧 Game statistics
-- 🚧 Sound effects
+### Planned Enhancements 
+-  SSL/TLS support (wss://)
+-  Persistent leaderboards (SQLite)
+-  Player authentication
+-  Admin panel
+-  Game statistics
+-  Sound effects
 
-## 🔧 Development
+##  Development
 
 ### Building for Development
 ```bash
@@ -358,18 +358,18 @@ make -f Makefile.cpp all
 All WebSocket messages use JSON format:
 
 ```javascript
-// Client → Server
+// Client  Server
 { "type": "create_game" }
 { "type": "join_game", "gamePin": "ABC123", "playerName": "John" }
 { "type": "submit_answer", "questionId": 1, "answer": 2 }
 
-// Server → Client
+// Server  Client
 { "type": "game_created", "gamePin": "ABC123" }
 { "type": "new_question", "question": {...}, "round": 1 }
 { "type": "player_eliminated", "playerId": "xyz", "playerName": "John" }
 ```
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Port Already in Use
 ```bash
@@ -392,7 +392,7 @@ taskkill /PID <PID> /F
 - **404 errors**: Ensure http_server is running and `public/` files are copied
 - **Questions not loading**: Check `build/questions/` directory exists
 
-## 📊 Performance
+##  Performance
 
 Typical resource usage:
 - **Memory**: 5-10 MB per server
@@ -402,7 +402,7 @@ Typical resource usage:
 
 Supports 100+ concurrent games on modest hardware.
 
-## 🤝 Contributing
+##  Contributing
 
 This is a student project for Network Programming course. Contributions welcome!
 - `questions`: Array of 5 questions per pack
@@ -416,7 +416,7 @@ Edit `speed-questions.json`:
 [
   {
     "id": "speed1",
-    "question": "What is 7 × 8?",
+    "question": "What is 7  8?",
     "correctAnswer": "56"
   }
 ]
@@ -440,28 +440,28 @@ Edit `speed-questions.json`:
 - Include variety in difficulty and topics
 - Round 2 packs should have exactly 5 questions each
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
-React Frontend (WebSocket) ←→ Node.js Bridge ←→ C TCP Server
-     ↓                           ↓                    ↓
+React Frontend (WebSocket)  Node.js Bridge  C TCP Server
+                                                    
 - Player Interface          - Elimination Logic  - Network Logic  
 - Host Controls            - Room Management     - Question Bank
 - Real-time Updates        - Score Tracking      - TCP Protocol
 ```
 
-## 🚀 Framework
+##  Framework
 
 This project uses **POSIX Sockets (BSD Sockets)** as the client-server framework for TCP communication on Linux.
 
 ### Framework Features
 
-- ✅ Native Linux support (no external dependencies)
-- ✅ Direct TCP protocol implementation  
-- ✅ Clean, easy-to-use API
-- ✅ React.js frontend with WebSocket support
-- ✅ Real-time multiplayer functionality
-- ✅ Comprehensive documentation and examples
+-  Native Linux support (no external dependencies)
+-  Direct TCP protocol implementation  
+-  Clean, easy-to-use API
+-  React.js frontend with WebSocket support
+-  Real-time multiplayer functionality
+-  Comprehensive documentation and examples
 
 ### Quick Start
 
@@ -507,23 +507,23 @@ For detailed framework documentation, see [docs/FRAMEWORK.md](docs/FRAMEWORK.md)
 
 ```
 .
-├── frontend/              # React.js quiz game frontend
-│   ├── src/
-│   │   ├── components/    # React components (GameHost, PlayerGame, etc.)
-│   │   ├── context/       # Game state management
-│   │   └── services/      # WebSocket communication
-│   ├── public/            # Static assets
-│   └── package.json       # Frontend dependencies
-├── websocket-bridge/      # Node.js WebSocket bridge server
-│   ├── server.js          # Main bridge server logic
-│   └── package.json       # Bridge server dependencies
-├── include/              # C header files (API definitions)
-├── src/             # Implementation files
-├── examples/        # Example programs
-├── docs/            # Documentation
-├── build/           # Build output (generated)
-├── Makefile         # Build configuration
-└── README.md        # This file
+ frontend/              # React.js quiz game frontend
+    src/
+       components/    # React components (GameHost, PlayerGame, etc.)
+       context/       # Game state management
+       services/      # WebSocket communication
+    public/            # Static assets
+    package.json       # Frontend dependencies
+ websocket-bridge/      # Node.js WebSocket bridge server
+    server.js          # Main bridge server logic
+    package.json       # Bridge server dependencies
+ include/              # C header files (API definitions)
+ src/             # Implementation files
+ examples/        # Example programs
+ docs/            # Documentation
+ build/           # Build output (generated)
+ Makefile         # Build configuration
+ README.md        # This file
 ```
 
 ### Building
@@ -552,3 +552,4 @@ make help         # Show available targets
 5. **Educational**: Fundamental to understanding network programming
 
 For more details, see the [Framework Documentation](docs/FRAMEWORK.md).
+

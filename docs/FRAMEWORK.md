@@ -63,12 +63,12 @@ The client component provides:
 ## Features
 
 ### Current Features
-✅ TCP connection establishment  
-✅ Bidirectional communication  
-✅ Clean error handling  
-✅ Socket option configuration (SO_REUSEADDR)  
-✅ Simple API design  
-✅ Example echo server/client  
+ TCP connection establishment  
+ Bidirectional communication  
+ Clean error handling  
+ Socket option configuration (SO_REUSEADDR)  
+ Simple API design  
+ Example echo server/client  
 
 ### Future Enhancements
 - Multi-threaded server support
@@ -81,19 +81,19 @@ The client component provides:
 
 ```
 .
-├── include/           # Header files
-│   ├── tcp_server.h  # Server API
-│   └── tcp_client.h  # Client API
-├── src/              # Implementation files
-│   ├── tcp_server.c  # Server implementation
-│   └── tcp_client.c  # Client implementation
-├── examples/         # Example programs
-│   ├── echo_server.c # Echo server example
-│   └── echo_client.c # Echo client example
-├── docs/             # Documentation
-│   └── FRAMEWORK.md  # This file
-├── build/            # Build output (generated)
-└── Makefile          # Build configuration
+ include/           # Header files
+    tcp_server.h  # Server API
+    tcp_client.h  # Client API
+ src/              # Implementation files
+    tcp_server.c  # Server implementation
+    tcp_client.c  # Client implementation
+ examples/         # Example programs
+    echo_server.c # Echo server example
+    echo_client.c # Echo client example
+ docs/             # Documentation
+    FRAMEWORK.md  # This file
+ build/            # Build output (generated)
+ Makefile          # Build configuration
 ```
 
 ## Building the Project
@@ -374,12 +374,12 @@ For high-performance applications, consider:
 4. Type messages and verify echo functionality
 
 ### Testing Checklist
-- ✅ Server initialization
-- ✅ Client connection
-- ✅ Bidirectional communication
-- ✅ Multiple messages
-- ✅ Graceful disconnection
-- ✅ Error handling
+-  Server initialization
+-  Client connection
+-  Bidirectional communication
+-  Multiple messages
+-  Graceful disconnection
+-  Error handling
 
 ## Contributing
 
@@ -405,3 +405,4 @@ To extend this framework:
 ## License
 
 This framework is part of the NP-G10-TheQuizGame project for educational purposes.
+

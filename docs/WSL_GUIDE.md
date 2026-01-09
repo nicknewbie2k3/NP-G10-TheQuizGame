@@ -1,10 +1,10 @@
 # Running on Linux (WSL) from Windows
 
-## ✅ Your Setup is Complete!
+##  Your Setup is Complete!
 
 Your project is now configured to run in **WSL (Windows Subsystem for Linux)** and is 100% Linux-compatible!
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### From Windows PowerShell:
 
@@ -39,7 +39,7 @@ cd /mnt/d/Chinhphuc/NP-G10-TheQuizGame
 ./linux-run.sh logs     # View logs
 ```
 
-## 📋 Available Commands
+##  Available Commands
 
 ```bash
 ./linux-run.sh install-deps  # Install dependencies (first time)
@@ -53,7 +53,7 @@ cd /mnt/d/Chinhphuc/NP-G10-TheQuizGame
 ./linux-run.sh all           # Build and run
 ```
 
-## 🎮 Playing the Game
+##  Playing the Game
 
 1. **Start servers** (one of):
    ```bash
@@ -66,32 +66,32 @@ cd /mnt/d/Chinhphuc/NP-G10-TheQuizGame
 
 3. **Host a game** or **Join game**
 
-4. **Play!** 🎯
+4. **Play!** 
 
-## 📊 Architecture
+##  Architecture
 
 ```
-┌─────────────────────────────┐
-│   Windows Browser           │
-│   http://localhost:3001     │
-└──────────┬──────────────────┘
-           │
-           │ HTTP/WebSocket
-           ▼
-┌─────────────────────────────┐
-│   WSL (Ubuntu Linux)        │
-│                             │
-│   ┌─────────────────────┐   │
-│   │ Game Server :8080   │   │
-│   └─────────────────────┘   │
-│                             │
-│   ┌─────────────────────┐   │
-│   │ HTTP Server :3001   │   │
-│   └─────────────────────┘   │
-└─────────────────────────────┘
+
+   Windows Browser           
+   http://localhost:3001     
+
+           
+            HTTP/WebSocket
+           
+
+   WSL (Ubuntu Linux)        
+                             
+      
+    Game Server :8080      
+      
+                             
+      
+    HTTP Server :3001      
+      
+
 ```
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### Issue: "Permission denied"
 ```bash
@@ -116,7 +116,7 @@ fuser -k 3001/tcp
 ./linux-run.sh install-deps
 ```
 
-## 📝 Development Workflow
+##  Development Workflow
 
 ### 1. Make code changes in Windows
 Edit files normally in VS Code or your preferred editor
@@ -131,7 +131,7 @@ wsl -d Ubuntu-24.04 -- bash -c "cd /mnt/d/Chinhphuc/NP-G10-TheQuizGame && ./linu
 ./linux-run.sh restart  # Restart servers with new build
 ```
 
-## 🎯 For Pure Linux (No WSL)
+##  For Pure Linux (No WSL)
 
 If deploying to a real Linux server:
 
@@ -151,7 +151,7 @@ cd build && ./http_server    # Terminal 2
 ./linux-run.sh all
 ```
 
-## 📁 Log Files
+##  Log Files
 
 When running with `./linux-run.sh run`, logs are saved to:
 - `build/game_server.log` - WebSocket server logs
@@ -164,21 +164,22 @@ tail -f build/game_server.log  # Follow game server log
 tail -f build/http_server.log  # Follow HTTP server log
 ```
 
-## ✨ Benefits of WSL
+##  Benefits of WSL
 
-✅ **True Linux environment** on Windows
-✅ **Full compatibility** with Linux libraries
-✅ **Easy testing** before deploying to real Linux server
-✅ **Seamless integration** - access Windows files from Linux
-✅ **Native performance** - nearly as fast as real Linux
+ **True Linux environment** on Windows
+ **Full compatibility** with Linux libraries
+ **Easy testing** before deploying to real Linux server
+ **Seamless integration** - access Windows files from Linux
+ **Native performance** - nearly as fast as real Linux
 
-## 🎓 What You've Achieved
+##  What You've Achieved
 
-- ✅ Pure C++ implementation
-- ✅ libwebsockets for WebSocket protocol
-- ✅ Runs natively on Linux
-- ✅ Cross-platform code (Linux/macOS/Windows with WSL)
-- ✅ No Node.js, no React, no frameworks
-- ✅ Production-ready for Linux deployment
+-  Pure C++ implementation
+-  libwebsockets for WebSocket protocol
+-  Runs natively on Linux
+-  Cross-platform code (Linux/macOS/Windows with WSL)
+-  No Node.js, no React, no frameworks
+-  Production-ready for Linux deployment
 
-Your project is ready for submission and deployment on Linux servers! 🚀
+Your project is ready for submission and deployment on Linux servers! 
+

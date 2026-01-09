@@ -1,6 +1,6 @@
 # Quick Reference Card
 
-## 🚀 Commands Cheat Sheet
+##  Commands Cheat Sheet
 
 ### Build Commands
 
@@ -47,7 +47,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
           mingw-w64-x86_64-libwebsockets mingw-w64-x86_64-nlohmann-json
 ```
 
-## 📁 Important Files
+##  Important Files
 
 | File | Purpose |
 |------|---------|
@@ -60,16 +60,16 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 | `public/styles.css` | Styling |
 | `websocket-bridge/questions/*.json` | Question files |
 
-## 🌐 Ports & URLs
+##  Ports & URLs
 
 | Service | Port | URL |
 |---------|------|-----|
 | WebSocket Server | 8080 | `ws://localhost:8080` |
 | HTTP Server | 3001 | `http://localhost:3001` |
 
-## 🎮 Game Flow
+##  Game Flow
 
-1. **Host** creates game → Gets PIN
+1. **Host** creates game  Gets PIN
 2. **Players** join with PIN + name
 3. **Host** starts game (2+ players required)
 4. **Round 1**: Multiple choice questions
@@ -78,7 +78,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 7. Another elimination
 8. Winner declared!
 
-## 📝 Question File Format
+##  Question File Format
 
 ### Round 1 Questions
 ```json
@@ -95,7 +95,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 ```json
 {
   "id": "speed1",
-  "question": "What is 7 × 8?",
+  "question": "What is 7  8?",
   "correctAnswer": "56"
 }
 ```
@@ -104,7 +104,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 ```json
 {
   "id": "pack1",
-  "title": "🌍 Geography",
+  "title": " Geography",
   "description": "World capitals",
   "questions": [
     {
@@ -116,7 +116,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 }
 ```
 
-## 🔧 Common Issues & Fixes
+##  Common Issues & Fixes
 
 | Problem | Solution |
 |---------|----------|
@@ -126,9 +126,9 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 | Questions not loading | Run `make copy-questions` or check `build/questions/` |
 | 404 errors | Check `build/public/` has HTML/CSS/JS files |
 
-## 📊 WebSocket Messages
+##  WebSocket Messages
 
-### Client → Server
+### Client  Server
 ```javascript
 { "type": "create_game" }
 { "type": "join_game", "gamePin": "ABC123", "playerName": "John" }
@@ -139,7 +139,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 { "type": "end_game" }
 ```
 
-### Server → Client
+### Server  Client
 ```javascript
 { "type": "game_created", "gamePin": "ABC123" }
 { "type": "join_success", "playerId": "xyz", "playerName": "John" }
@@ -154,7 +154,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
 { "type": "error", "message": "Error message" }
 ```
 
-## 🎯 Key Data Structures
+##  Key Data Structures
 
 ### Player
 ```cpp
@@ -183,7 +183,7 @@ struct Game {
 };
 ```
 
-## 🛠️ Debugging
+##  Debugging
 
 ### Enable Verbose Logging
 ```cpp
@@ -211,14 +211,14 @@ Press F12 in browser to see:
 - JavaScript errors
 - Network traffic
 
-## 📖 Documentation Links
+##  Documentation Links
 
 - [Full README](../README.md)
 - [C++ Implementation Guide](CPP_IMPLEMENTATION.md)
 - [Windows Build Guide](WINDOWS_BUILD.md)
 - [Migration Guide](MIGRATION_GUIDE.md)
 
-## 💡 Tips
+##  Tips
 
 - **Development**: Build with `-DCMAKE_BUILD_TYPE=Debug` for debugging
 - **Production**: Build with `-DCMAKE_BUILD_TYPE=Release` for performance
@@ -226,7 +226,7 @@ Press F12 in browser to see:
 - **Custom Questions**: Edit JSON files, no rebuild needed for game server
 - **Frontend Changes**: Rebuild HTTP server to copy updated files
 
-## ⚡ Quick Start (One-liner)
+##  Quick Start (One-liner)
 
 ```bash
 # Linux/macOS
@@ -237,7 +237,7 @@ cd build && ./game_server & ./http_server &
 # Then open: http://localhost:3001
 ```
 
-## 🎓 Learning Resources
+##  Learning Resources
 
 - **libwebsockets**: https://libwebsockets.org/
 - **nlohmann/json**: https://github.com/nlohmann/json
@@ -248,3 +248,4 @@ cd build && ./game_server & ./http_server &
 
 **Last Updated**: 2025-12-30  
 **Version**: 2.0 (C++ Implementation)
+

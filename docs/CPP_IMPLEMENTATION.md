@@ -7,60 +7,60 @@ The quiz game has been completely rewritten in C++ to meet the requirement of no
 ### Component Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Web Browser                       │
-│         (Vanilla HTML/CSS/JavaScript)               │
-└────────────┬────────────────────────────────────────┘
-             │
-             │ HTTP (port 3001)
-             │
-        ┌────▼────────────────┐
-        │  HTTP Server (C++)  │
-        │  Serves static files│
-        └─────────────────────┘
+
+                   Web Browser                       
+         (Vanilla HTML/CSS/JavaScript)               
+
+             
+              HTTP (port 3001)
+             
+        
+          HTTP Server (C++)  
+          Serves static files
+        
              
              WebSocket (port 8080)
-             │
-        ┌────▼──────────────────────┐
-        │ WebSocket Game Server (C++)│
-        │ - Game logic              │
-        │ - Player management       │
-        │ - Elimination system      │
-        │ - Question handling       │
-        └───────────────────────────┘
+             
+        
+         WebSocket Game Server (C++)
+         - Game logic              
+         - Player management       
+         - Elimination system      
+         - Question handling       
+        
 ```
 
 ## File Structure
 
 ```
 NP-G10-TheQuizGame/
-├── cpp-server/              # C++ server implementation
-│   ├── game_server.h       # Header file with structures
-│   ├── main.cpp            # WebSocket server entry point
-│   ├── game_logic.cpp      # Game state management
-│   ├── json_loader.cpp     # JSON question loader
-│   ├── http_server.cpp     # HTTP static file server
-│   └── json.hpp            # nlohmann/json library
-│
-├── public/                  # Web frontend (vanilla JS)
-│   ├── index.html          # Main HTML file
-│   ├── styles.css          # Styling
-│   └── game.js             # Game client logic
-│
-├── websocket-bridge/questions/  # Question JSON files
-│   ├── round1-questions.json
-│   ├── round2-question-packs.json
-│   └── speed-questions.json
-│
-├── build/                   # Build output directory
-│   ├── game_server         # Compiled game server
-│   ├── http_server         # Compiled HTTP server
-│   ├── questions/          # Copied question files
-│   └── public/             # Copied web files
-│
-├── CMakeLists.txt          # CMake build configuration
-├── Makefile.cpp            # GNU Make build file
-└── README.md               # Main documentation
+ cpp-server/              # C++ server implementation
+    game_server.h       # Header file with structures
+    main.cpp            # WebSocket server entry point
+    game_logic.cpp      # Game state management
+    json_loader.cpp     # JSON question loader
+    http_server.cpp     # HTTP static file server
+    json.hpp            # nlohmann/json library
+
+ public/                  # Web frontend (vanilla JS)
+    index.html          # Main HTML file
+    styles.css          # Styling
+    game.js             # Game client logic
+
+ websocket-bridge/questions/  # Question JSON files
+    round1-questions.json
+    round2-question-packs.json
+    speed-questions.json
+
+ build/                   # Build output directory
+    game_server         # Compiled game server
+    http_server         # Compiled HTTP server
+    questions/          # Copied question files
+    public/             # Copied web files
+
+ CMakeLists.txt          # CMake build configuration
+ Makefile.cpp            # GNU Make build file
+ README.md               # Main documentation
 ```
 
 ## Technology Stack
@@ -243,7 +243,7 @@ Simple HTTP server to serve web files:
 
 All WebSocket messages use JSON format:
 
-### Client → Server
+### Client  Server
 ```json
 {
     "type": "create_game"
@@ -262,7 +262,7 @@ All WebSocket messages use JSON format:
 }
 ```
 
-### Server → Client
+### Server  Client
 ```json
 {
     "type": "game_created",
@@ -353,3 +353,4 @@ Potential improvements while maintaining C++ requirement:
 - **nlohmann/json**: https://github.com/nlohmann/json
 - **WebSocket Protocol**: RFC 6455
 - **C++ Reference**: https://en.cppreference.com/
+

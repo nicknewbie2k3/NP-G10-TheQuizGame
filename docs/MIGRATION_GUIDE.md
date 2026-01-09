@@ -1,4 +1,4 @@
-# Migration Guide: Node.js/React → C++/Vanilla JS
+# Migration Guide: Node.js/React  C++/Vanilla JS
 
 ## Overview
 
@@ -8,37 +8,37 @@ This document explains the conversion from the original Node.js/React implementa
 
 ### Before (Node.js/React Stack)
 ```
-┌─────────────┐
-│   Browser   │
-│  (React)    │
-└──────┬──────┘
-       │ WebSocket
-       ▼
-┌─────────────────┐
-│   Node.js       │
-│ WebSocket Bridge│
-│  (server.js)    │
-└─────────────────┘
+
+   Browser   
+  (React)    
+
+        WebSocket
+       
+
+   Node.js       
+ WebSocket Bridge
+  (server.js)    
+
 ```
 
 ### After (C++ Stack)
 ```
-┌─────────────┐
-│   Browser   │
-│ (Vanilla JS)│
-└──────┬──────┘
-       │ WebSocket
-       ▼
-┌─────────────────┐
-│  C++ WebSocket  │
-│  Game Server    │
-│  (main.cpp)     │
-└─────────────────┘
+
+   Browser   
+ (Vanilla JS)
+
+        WebSocket
+       
+
+  C++ WebSocket  
+  Game Server    
+  (main.cpp)     
+
 ```
 
 ## File Mapping
 
-### Backend: Node.js → C++
+### Backend: Node.js  C++
 
 | Original (Node.js) | New (C++) | Purpose |
 |-------------------|-----------|---------|
@@ -48,7 +48,7 @@ This document explains the conversion from the original Node.js/React implementa
 | - | `cpp-server/game_server.h` | Type definitions |
 | - | `cpp-server/http_server.cpp` | Static file server |
 
-### Frontend: React → Vanilla JS
+### Frontend: React  Vanilla JS
 
 | Original (React) | New (Vanilla JS) | Purpose |
 |-----------------|------------------|---------|
@@ -233,7 +233,7 @@ function PlayerList({ players }) {
             {players.map(player => (
                 <div key={player.id} className="player-item">
                     <span>{player.name}</span>
-                    <span>{player.connected ? '🟢' : '🔴'}</span>
+                    <span>{player.connected ? '' : ''}</span>
                 </div>
             ))}
         </div>
@@ -250,7 +250,7 @@ function updatePlayerList() {
         <div class="player-item">
             <span class="player-name">${p.name}</span>
             <span class="player-status ${p.connected ? 'connected' : 'disconnected'}">
-                ${p.connected ? '🟢' : '🔴'}
+                ${p.connected ? '' : ''}
             </span>
         </div>
     `).join('');
@@ -262,16 +262,16 @@ function updatePlayerList() {
 ## Dependencies Removed
 
 ### Node.js packages (no longer needed):
-- ❌ `ws` (WebSocket library)
-- ❌ `uuid` (ID generation)
-- ❌ `react`
-- ❌ `react-dom`
-- ❌ `react-scripts`
+-  `ws` (WebSocket library)
+-  `uuid` (ID generation)
+-  `react`
+-  `react-dom`
+-  `react-scripts`
 
 ### New C++ dependencies:
-- ✅ `libwebsockets` (WebSocket protocol)
-- ✅ `nlohmann-json` (JSON parsing)
-- ✅ Standard C++ library (STL)
+-  `libwebsockets` (WebSocket protocol)
+-  `nlohmann-json` (JSON parsing)
+-  Standard C++ library (STL)
 
 ## Build Process Changes
 
@@ -313,19 +313,19 @@ The WebSocket message protocol remains **100% compatible**. All message types ar
 
 ## What Stayed the Same
 
-✅ **Question JSON format** - No changes needed  
-✅ **Game rules** - Same elimination system  
-✅ **WebSocket protocol** - Same message types  
-✅ **Port numbers** - 8080 (WebSocket), 3001 (HTTP)  
-✅ **User experience** - Same gameplay flow  
+ **Question JSON format** - No changes needed  
+ **Game rules** - Same elimination system  
+ **WebSocket protocol** - Same message types  
+ **Port numbers** - 8080 (WebSocket), 3001 (HTTP)  
+ **User experience** - Same gameplay flow  
 
 ## What's Different
 
-🔄 **Language** - JavaScript → C++  
-🔄 **Frontend framework** - React → Vanilla JS  
-🔄 **Build system** - npm → Make/CMake  
-🔄 **Package manager** - npm → apt/brew/vcpkg  
-🔄 **Runtime** - Node.js → Native executable  
+ **Language** - JavaScript  C++  
+ **Frontend framework** - React  Vanilla JS  
+ **Build system** - npm  Make/CMake  
+ **Package manager** - npm  apt/brew/vcpkg  
+ **Runtime** - Node.js  Native executable  
 
 ## Migration Checklist
 
@@ -358,12 +358,12 @@ If you're updating an existing deployment:
 
 ## Benefits of C++ Implementation
 
-1. **✅ No frameworks requirement** - Pure C++, no React/Vue/Angular
-2. **✅ Fast performance** - Native code execution
-3. **✅ Low resource usage** - Minimal memory footprint
-4. **✅ Single binary** - No node_modules, easy deployment
-5. **✅ Type safety** - Compile-time error checking
-6. **✅ Educational** - Learn systems programming and networking
+1. ** No frameworks requirement** - Pure C++, no React/Vue/Angular
+2. ** Fast performance** - Native code execution
+3. ** Low resource usage** - Minimal memory footprint
+4. ** Single binary** - No node_modules, easy deployment
+5. ** Type safety** - Compile-time error checking
+6. ** Educational** - Learn systems programming and networking
 
 ## Next Steps
 
@@ -383,4 +383,5 @@ If you encounter issues during migration:
 4. Check server logs for error messages
 5. Test with minimal 2-player game first
 
-Good luck with your C++ implementation! 🚀
+Good luck with your C++ implementation! 
+

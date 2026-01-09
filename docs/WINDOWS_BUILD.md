@@ -245,7 +245,7 @@ Create a file `build.ps1` in your project root:
 ```powershell
 # Quick build script for Windows
 
-Write-Host "🔨 Building Quiz Game C++ Server..." -ForegroundColor Cyan
+Write-Host " Building Quiz Game C++ Server..." -ForegroundColor Cyan
 
 # Check if build directory exists
 if (!(Test-Path -Path "build")) {
@@ -256,24 +256,24 @@ if (!(Test-Path -Path "build")) {
 Set-Location build
 
 # Configure with CMake
-Write-Host "📦 Configuring with CMake..." -ForegroundColor Yellow
+Write-Host " Configuring with CMake..." -ForegroundColor Yellow
 cmake -G "MinGW Makefiles" ..
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ CMake configuration failed!" -ForegroundColor Red
+    Write-Host " CMake configuration failed!" -ForegroundColor Red
     exit 1
 }
 
 # Build
-Write-Host "🔧 Compiling..." -ForegroundColor Yellow
+Write-Host " Compiling..." -ForegroundColor Yellow
 mingw32-make
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "❌ Build failed!" -ForegroundColor Red
+    Write-Host " Build failed!" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "✅ Build successful!" -ForegroundColor Green
+Write-Host " Build successful!" -ForegroundColor Green
 Write-Host ""
 Write-Host "To run the servers:" -ForegroundColor Cyan
 Write-Host "  Terminal 1: cd build && ./game_server.exe"
@@ -297,7 +297,7 @@ Create `run.ps1`:
 ```powershell
 # Quick start script - runs both servers
 
-Write-Host "🚀 Starting Quiz Game Servers..." -ForegroundColor Cyan
+Write-Host " Starting Quiz Game Servers..." -ForegroundColor Cyan
 
 # Start game server in new window
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PSScriptRoot\build'; ./game_server.exe"
@@ -314,8 +314,8 @@ Start-Sleep -Seconds 2
 # Open browser
 Start-Process "http://localhost:3001"
 
-Write-Host "✅ Servers started!" -ForegroundColor Green
-Write-Host "📱 Browser should open automatically" -ForegroundColor Cyan
+Write-Host " Servers started!" -ForegroundColor Green
+Write-Host " Browser should open automatically" -ForegroundColor Cyan
 Write-Host "   If not, navigate to: http://localhost:3001" -ForegroundColor Yellow
 ```
 
@@ -359,10 +359,11 @@ VS Code `tasks.json`:
 
 After successful build:
 
-1. ✅ Both servers are running
-2. ✅ Browser shows the game interface
-3. 🎮 Try hosting a game and joining from another tab
-4. 📝 Customize questions in `build/questions/` directory
-5. 🎨 Modify frontend in `public/` directory
+1.  Both servers are running
+2.  Browser shows the game interface
+3.  Try hosting a game and joining from another tab
+4.  Customize questions in `build/questions/` directory
+5.  Modify frontend in `public/` directory
 
-Happy coding! 🚀
+Happy coding! 
+

@@ -21,3 +21,8 @@ CMakeCache.txt
 *.swo
 .DS_Store
 Thumbs.db
+
+game_server.log
+game_server.pid
+http_server.log
+http_server.pid
