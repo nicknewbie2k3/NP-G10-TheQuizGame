@@ -22,7 +22,7 @@ function Write-ColorOutput($ForegroundColor) {
 
 function Show-Help {
     Write-ColorOutput Cyan @"
-🎮 Quiz Game C++ Build Script
+ Quiz Game C++ Build Script
 
 Usage:
     .\build.ps1 -All          Build everything
@@ -50,18 +50,18 @@ Install dependencies:
 }
 
 function Clean-Build {
-    Write-ColorOutput Yellow "🧹 Cleaning build directory..."
+    Write-ColorOutput Yellow " Cleaning build directory..."
     
     if (Test-Path "build") {
         Remove-Item -Recurse -Force "build"
-        Write-ColorOutput Green "✅ Build directory cleaned"
+        Write-ColorOutput Green " Build directory cleaned"
     } else {
-        Write-ColorOutput Cyan "ℹ️ Build directory doesn't exist"
+        Write-ColorOutput Cyan " Build directory doesn't exist"
     }
 }
 
 function Build-Project {
-    Write-ColorOutput Yellow "🔨 Building project..."
+    Write-ColorOutput Yellow " Building project..."
     
     # Create build directory
     if (!(Test-Path "build")) {
@@ -84,7 +84,7 @@ function Build-Project {
     }
     
     if (!$cmake) {
-        Write-ColorOutput Red "❌ CMake not found!"
+        Write-ColorOutput Red " CMake not found!"
         Write-ColorOutput Yellow "Please install CMake via MSYS2:"
         Write-ColorOutput Cyan "  pacman -S mingw-w64-x86_64-cmake"
         exit 1
@@ -95,27 +95,27 @@ function Build-Project {
     # Configure
     Push-Location "build"
     try {
-        Write-ColorOutput Yellow "📦 Configuring with CMake..."
+        Write-ColorOutput Yellow " Configuring with CMake..."
         & $cmake -G "MinGW Makefiles" .. 2>&1 | Tee-Object -Variable cmakeOutput
         
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorOutput Red "❌ CMake configuration failed!"
+            Write-ColorOutput Red " CMake configuration failed!"
             Write-ColorOutput Yellow "Make sure you have all dependencies installed"
             Pop-Location
             exit 1
         }
         
         # Build
-        Write-ColorOutput Yellow "🔧 Compiling..."
+        Write-ColorOutput Yellow " Compiling..."
         & mingw32-make 2>&1 | Tee-Object -Variable makeOutput
         
         if ($LASTEXITCODE -ne 0) {
-            Write-ColorOutput Red "❌ Build failed!"
+            Write-ColorOutput Red " Build failed!"
             Pop-Location
             exit 1
         }
         
-        Write-ColorOutput Green "✅ Build successful!"
+        Write-ColorOutput Green " Build successful!"
         
     } finally {
         Pop-Location
@@ -123,17 +123,17 @@ function Build-Project {
 }
 
 function Run-Servers {
-    Write-ColorOutput Yellow "🚀 Starting servers..."
+    Write-ColorOutput Yellow " Starting servers..."
     
     # Check if executables exist
     if (!(Test-Path "build\game_server.exe")) {
-        Write-ColorOutput Red "❌ game_server.exe not found!"
+        Write-ColorOutput Red " game_server.exe not found!"
         Write-ColorOutput Yellow "Run: .\build.ps1 -Build"
         exit 1
     }
     
     if (!(Test-Path "build\http_server.exe")) {
-        Write-ColorOutput Red "❌ http_server.exe not found!"
+        Write-ColorOutput Red " http_server.exe not found!"
         Write-ColorOutput Yellow "Run: .\build.ps1 -Build"
         exit 1
     }
@@ -143,7 +143,7 @@ function Run-Servers {
     Start-Process powershell -ArgumentList @(
         "-NoExit",
         "-Command",
-        "cd '$PSScriptRoot\build'; Write-Host '🎮 Game Server Running' -ForegroundColor Green; ./game_server.exe"
+        "cd '$PSScriptRoot\build'; Write-Host ' Game Server Running' -ForegroundColor Green; ./game_server.exe"
     )
     
     Start-Sleep -Seconds 2
@@ -153,7 +153,7 @@ function Run-Servers {
     Start-Process powershell -ArgumentList @(
         "-NoExit",
         "-Command",
-        "cd '$PSScriptRoot\build'; Write-Host '🌐 HTTP Server Running' -ForegroundColor Green; ./http_server.exe"
+        "cd '$PSScriptRoot\build'; Write-Host ' HTTP Server Running' -ForegroundColor Green; ./http_server.exe"
     )
     
     Start-Sleep -Seconds 2
@@ -164,10 +164,10 @@ function Run-Servers {
     
     Write-ColorOutput Green @"
 
-✅ Servers started successfully!
+ Servers started successfully!
 
-🎮 Game Server: ws://localhost:8080
-🌐 Web Interface: http://localhost:3001
+ Game Server: ws://localhost:8080
+ Web Interface: http://localhost:3001
 
 To stop servers: Close the PowerShell windows or press Ctrl+C
 "@
@@ -198,4 +198,5 @@ if ($Run) {
     Run-Servers
 }
 
-Write-ColorOutput Green "✅ Done!"
+Write-ColorOutput Green " Done!"
+

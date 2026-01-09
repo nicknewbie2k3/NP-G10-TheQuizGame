@@ -23,7 +23,7 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
     
     switch (reason) {
         case LWS_CALLBACK_ESTABLISHED:
-            std::cout << "🔌 New WebSocket connection established" << std::endl;
+            std::cout << " New WebSocket connection established" << std::endl;
             break;
             
         case LWS_CALLBACK_RECEIVE: {
@@ -32,7 +32,7 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                 json msg = json::parse(message);
                 
                 std::string type = msg["type"];
-                std::cout << "📨 Received message: " << type << std::endl;
+                std::cout << " Received message: " << type << std::endl;
                 
                 if (type == "create_game") {
                     handleCreateGame(wsi, ctx);
@@ -92,17 +92,17 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                     handleEndGame(wsi, ctx);
                 }
                 else {
-                    std::cout << "⚠️ Unknown message type: " << type << std::endl;
+                    std::cout << " Unknown message type: " << type << std::endl;
                 }
                 
             } catch (const std::exception& e) {
-                std::cerr << "❌ Error parsing message: " << e.what() << std::endl;
+                std::cerr << " Error parsing message: " << e.what() << std::endl;
             }
             break;
         }
             
         case LWS_CALLBACK_CLOSED:
-            std::cout << "🔌 WebSocket connection closed" << std::endl;
+            std::cout << " WebSocket connection closed" << std::endl;
             handleDisconnection(wsi, ctx);
             break;
             
@@ -139,20 +139,20 @@ int main(int argc, char **argv) {
     globalContext = &serverCtx;
     
     // Load questions from JSON files
-    std::cout << "📚 Loading questions..." << std::endl;
+    std::cout << " Loading questions..." << std::endl;
     
     if (!loadQuestionsFromJSON("questions/round1-questions.json", serverCtx.mockQuestions)) {
-        std::cout << "⚠️ Using default Round 1 questions" << std::endl;
+        std::cout << " Using default Round 1 questions" << std::endl;
         createDefaultQuestions(serverCtx.mockQuestions);
     }
     
     if (!loadSpeedQuestionsFromJSON("questions/speed-questions.json", serverCtx.speedQuestions)) {
-        std::cout << "⚠️ Using default speed questions" << std::endl;
+        std::cout << " Using default speed questions" << std::endl;
         createDefaultSpeedQuestions(serverCtx.speedQuestions);
     }
     
     if (!loadQuestionPacksFromJSON("questions/round2-question-packs.json", serverCtx.questionPacks)) {
-        std::cout << "⚠️ Using default question packs" << std::endl;
+        std::cout << " Using default question packs" << std::endl;
         createDefaultQuestionPacks(serverCtx.questionPacks);
     }
     
@@ -170,12 +170,12 @@ int main(int argc, char **argv) {
     // Create libwebsocket context
     context = lws_create_context(&info);
     if (!context) {
-        std::cerr << "❌ Failed to create libwebsocket context" << std::endl;
+        std::cerr << " Failed to create libwebsocket context" << std::endl;
         return 1;
     }
     
-    std::cout << "🚀 WebSocket Game Server started on port " << port << std::endl;
-    std::cout << "📱 Players can connect to ws://localhost:" << port << std::endl;
+    std::cout << " WebSocket Game Server started on port " << port << std::endl;
+    std::cout << " Players can connect to ws://localhost:" << port << std::endl;
     std::cout << "Press Ctrl+C to stop the server" << std::endl;
     
     // Main event loop
@@ -187,7 +187,8 @@ int main(int argc, char **argv) {
     // Cleanup
     lws_context_destroy(context);
     
-    std::cout << "\n👋 Server stopped" << std::endl;
+    std::cout << "\n Server stopped" << std::endl;
     
     return 0;
 }
+

@@ -3,7 +3,7 @@
 # Safe server startup script for Windows (PowerShell)
 # This script cleans up old processes before starting servers
 
-Write-Host "🔧 Cleaning up old processes..." -ForegroundColor Yellow
+Write-Host " Cleaning up old processes..." -ForegroundColor Yellow
 
 # Kill existing processes
 Stop-Process -Name "game_server" -Force -ErrorAction SilentlyContinue | Out-Null
@@ -22,9 +22,9 @@ if ($port3001) {
 
 Start-Sleep -Seconds 2
 
-Write-Host "✅ Cleanup complete" -ForegroundColor Green
+Write-Host " Cleanup complete" -ForegroundColor Green
 Write-Host ""
-Write-Host "🚀 Starting servers..." -ForegroundColor Yellow
+Write-Host " Starting servers..." -ForegroundColor Yellow
 
 Push-Location build
 
@@ -49,18 +49,19 @@ Pop-Location
 # Check if servers are still running
 if ($gameProcess.HasExited -eq $false -and $httpProcess.HasExited -eq $false) {
     Write-Host ""
-    Write-Host "✅ Servers started successfully!" -ForegroundColor Green
+    Write-Host " Servers started successfully!" -ForegroundColor Green
     Write-Host "   Game Server: ws://localhost:8080 (PID: $($gameProcess.Id))"
     Write-Host "   HTTP Server: http://localhost:3001 (PID: $($httpProcess.Id))"
     Write-Host ""
-    Write-Host "📝 Logs:"
+    Write-Host " Logs:"
     Write-Host "   build\game_server.log"
     Write-Host "   build\http_server.log"
 } else {
     Write-Host ""
-    Write-Host "❌ Server startup failed. Check logs:" -ForegroundColor Red
+    Write-Host " Server startup failed. Check logs:" -ForegroundColor Red
     if ((Test-Path "build\game_server.log")) {
         Get-Content "build\game_server.log" -Tail 20
     }
     exit 1
 }
+

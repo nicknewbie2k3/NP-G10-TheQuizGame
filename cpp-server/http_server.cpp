@@ -107,12 +107,12 @@ int main(int argc, char **argv) {
     
     context = lws_create_context(&info);
     if (!context) {
-        fprintf(stderr, "❌ Failed to create HTTP server context\n");
+        fprintf(stderr, " Failed to create HTTP server context\n");
         return 1;
     }
     
-    printf("🌐 HTTP Server started on http://localhost:%d\n", port);
-    printf("📁 Serving files from ./public/\n");
+    printf(" HTTP Server started on http://localhost:%d\n", port);
+    printf(" Serving files from ./public/\n");
     printf("Press Ctrl+C to stop\n");
     
     while (!interrupted) {
@@ -120,7 +120,8 @@ int main(int argc, char **argv) {
     }
     
     lws_context_destroy(context);
-    printf("\n👋 HTTP Server stopped\n");
+    printf("\n HTTP Server stopped\n");
     
     return 0;
 }
+

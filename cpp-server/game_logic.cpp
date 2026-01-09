@@ -129,7 +129,7 @@ void handleCreateGame(struct lws* wsi, ServerContext* ctx) {
     
     sendToClient(wsi, response.dump());
     
-    std::cout << "🎮 Game created with PIN: " << gamePin << std::endl;
+    std::cout << " Game created with PIN: " << gamePin << std::endl;
 }
 
 void handleJoinGame(struct lws* wsi, const std::string& gamePin, const std::string& playerName, ServerContext* ctx) {
@@ -195,7 +195,7 @@ void handleJoinGame(struct lws* wsi, const std::string& gamePin, const std::stri
     
     broadcastToGame(gamePin, broadcast.dump(), nullptr, ctx);
     
-    std::cout << "👤 Player '" << playerName << "' joined game " << gamePin << std::endl;
+    std::cout << " Player '" << playerName << "' joined game " << gamePin << std::endl;
 }
 
 void handleStartGame(struct lws* wsi, ServerContext* ctx) {
@@ -255,7 +255,7 @@ void handleStartGame(struct lws* wsi, ServerContext* ctx) {
         broadcastToGame(game->pin, questionMsg.dump(), nullptr, ctx);
     }
     
-    std::cout << "🚀 Game " << game->pin << " started with " << game->players.size() << " players" << std::endl;
+    std::cout << " Game " << game->pin << " started with " << game->players.size() << " players" << std::endl;
 }
 
 void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerContext* ctx) {
@@ -353,7 +353,7 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
             }
 
             if(lowestPlayers.size() > 1){
-                std::cout << "⚠️ Tie detected! " << lowestPlayers.size() << " players have score " << lowestScore << std::endl;
+                std::cout << " Tie detected! " << lowestPlayers.size() << " players have score " << lowestScore << std::endl;
 
                 // Set up tiebreaker round
                 game->isTieBreaker = true;
@@ -507,7 +507,7 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
     response["type"] = "speed_answer_received";
     sendToClient(wsi, response.dump());
     
-    std::cout << "📝 Speed answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
+    std::cout << " Speed answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
     
     // Check if all active players have answered
     size_t activePlayerCount = 0;
@@ -519,7 +519,7 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
     
     if (game->speedResponses.size() >= activePlayerCount) {
         // All players have answered - send results
-        std::cout << "✅ All players answered speed question, sending results..." << std::endl;
+        std::cout << " All players answered speed question, sending results..." << std::endl;
         
         // Get the correct answer (assuming first speed question for now)
         std::string correctAnswer = "";
@@ -590,16 +590,16 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         }
         
         // Check if this is speed_order phase (don't eliminate anyone, just show results)
-        std::cout << "🔍 Debug - isSpeedOrderPhase flag: " << (game->isSpeedOrderPhase ? "TRUE" : "FALSE") << std::endl;
+        std::cout << " Debug - isSpeedOrderPhase flag: " << (game->isSpeedOrderPhase ? "TRUE" : "FALSE") << std::endl;
         if (game->isSpeedOrderPhase) {
-            std::cout << "📋 Speed order question complete, showing results and player order (NO elimination)..." << std::endl;
+            std::cout << " Speed order question complete, showing results and player order (NO elimination)..." << std::endl;
             
             // Store speed round response times for tiebreaking later
             for (const auto& response : sortedResponses) {
                 const auto& playerId = response.first;
                 const auto& responseTime = response.second.second;
                 game->speedOrderTimes[playerId] = responseTime;
-                std::cout << "💾 Saved speed time for player " << playerId << ": " << responseTime << "ms" << std::endl;
+                std::cout << " Saved speed time for player " << playerId << ": " << responseTime << "ms" << std::endl;
             }
             
             // Re-order activePlayers based on speed order results
@@ -615,7 +615,7 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
                     auto player = findPlayerById(game, playerId);
                     if (player) {
                         reorderedPlayers.push_back(player);
-                        std::cout << "✅ Correct: " << player->name << " (" << response.second.second << "ms)" << std::endl;
+                        std::cout << " Correct: " << player->name << " (" << response.second.second << "ms)" << std::endl;
                     }
                 }
             }
@@ -629,7 +629,7 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
                     auto player = findPlayerById(game, playerId);
                     if (player) {
                         reorderedPlayers.push_back(player);
-                        std::cout << "❌ Incorrect: " << player->name << " (" << response.second.second << "ms)" << std::endl;
+                        std::cout << " Incorrect: " << player->name << " (" << response.second.second << "ms)" << std::endl;
                     }
                 }
             }
@@ -637,7 +637,7 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
             // Update activePlayers with the new order
             game->activePlayers = reorderedPlayers;
             
-            std::cout << "📋 Player order for Round 2 determined:" << std::endl;
+            std::cout << " Player order for Round 2 determined:" << std::endl;
             for (size_t i = 0; i < game->activePlayers.size(); i++) {
                 std::cout << "  " << (i+1) << ". " << game->activePlayers[i]->name << std::endl;
             }
@@ -678,7 +678,7 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
                 results["eliminated"]["playerId"] = eliminatedId;
                 results["eliminated"]["playerName"] = eliminatedName;
 
-                std::cout << "❌ Player eliminated: " << eliminatedName << std::endl;
+                std::cout << " Player eliminated: " << eliminatedName << std::endl;
             }
         }
         
@@ -716,11 +716,11 @@ void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerCont
     response["type"] = "tiebreak_answer_received";
     sendToClient(wsi, response.dump());
     
-    std::cout << "📝 Tiebreak answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
+    std::cout << " Tiebreak answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
     
     // Check if all tiebreaker participants have answered
     if (game->speedResponses.size() >= game->tieBreakerIds.size()) {
-        std::cout << "✅ All tiebreak participants answered, determining winner..." << std::endl;
+        std::cout << " All tiebreak participants answered, determining winner..." << std::endl;
         
         // Get the correct answer
         std::string correctAnswer = "";
@@ -809,7 +809,7 @@ void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerCont
                 tiebreakResults["eliminated"]["playerId"] = eliminatedId;
                 tiebreakResults["eliminated"]["playerName"] = eliminatedName;
                 
-                std::cout << "❌ Tiebreak eliminated: " << eliminatedName << std::endl;
+                std::cout << " Tiebreak eliminated: " << eliminatedName << std::endl;
             }
         }
         
@@ -827,7 +827,7 @@ void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerCont
         // broadcastToGame(game->pin, roundEnd.dump(), nullptr, ctx);
         
         // Don't auto-transition - wait for host to continue
-        std::cout << "✅ Tiebreak complete. Waiting for host to continue to Round 2..." << std::endl;
+        std::cout << " Tiebreak complete. Waiting for host to continue to Round 2..." << std::endl;
     }
 }
 
@@ -838,14 +838,14 @@ void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
     // Only host can continue
     if (game->hostWsi != wsi) return;
     
-    std::cout << "📋 Continuing from speed order to Round 2 question packs..." << std::endl;
+    std::cout << " Continuing from speed order to Round 2 question packs..." << std::endl;
     
     // Debug: Show all players and their elimination status
-    std::cout << "🔍 Debug - All players in game:" << std::endl;
+    std::cout << " Debug - All players in game:" << std::endl;
     for (const auto& p : game->players) {
         std::cout << "  - Player " << p->name << " (ID: " << p->id << ") - Eliminated: " << (p->isEliminated ? "YES" : "NO") << std::endl;
     }
-    std::cout << "🔍 Debug - Active players count: " << game->activePlayers.size() << std::endl;
+    std::cout << " Debug - Active players count: " << game->activePlayers.size() << std::endl;
     for (const auto& p : game->activePlayers) {
         std::cout << "  - Active player " << p->name << " (ID: " << p->id << ") - Eliminated: " << (p->isEliminated ? "YES" : "NO") << std::endl;
     }
@@ -874,7 +874,7 @@ void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx) {
         }
     }
     
-    std::cout << "📋 Player order established with " << game->round2PlayerOrder.size() << " players" << std::endl;
+    std::cout << " Player order established with " << game->round2PlayerOrder.size() << " players" << std::endl;
     for (size_t i = 0; i < game->round2PlayerOrder.size(); i++) {
         std::cout << "  Position " << (i+1) << ": Player ID " << game->round2PlayerOrder[i] << std::endl;
     }
@@ -907,7 +907,7 @@ void handleContinueToRound2(struct lws* wsi, ServerContext* ctx) {
     // Only host can continue
     if (game->hostWsi != wsi) return;
     
-    std::cout << "📋 Host starting Round 2 with speed order question..." << std::endl;
+    std::cout << " Host starting Round 2 with speed order question..." << std::endl;
     
     game->currentRound = 2;
     game->currentQuestion = 0;
@@ -952,7 +952,7 @@ void handleDisconnection(struct lws* wsi, ServerContext* ctx) {
         player->connected = false;
         player->wsi = nullptr;
         
-        std::cout << "👋 " << player->name << " disconnected" << std::endl;
+        std::cout << " " << player->name << " disconnected" << std::endl;
         
         json disconnect;
         disconnect["type"] = "player_disconnected";
@@ -965,7 +965,7 @@ void handleDisconnection(struct lws* wsi, ServerContext* ctx) {
     // Check if host disconnected
     if (game->hostWsi == wsi) {
         game->hostWsi = nullptr;
-        std::cout << "👋 Host disconnected from game " << game->pin << std::endl;
+        std::cout << " Host disconnected from game " << game->pin << std::endl;
     }
     
     // Check if all players have disconnected
@@ -978,12 +978,12 @@ void handleDisconnection(struct lws* wsi, ServerContext* ctx) {
     }
     
     if (!anyConnected && game->hostWsi == nullptr) {
-        std::cout << "🔴 Game " << game->pin << " abandoned - all clients disconnected. Removing game." << std::endl;
+        std::cout << " Game " << game->pin << " abandoned - all clients disconnected. Removing game." << std::endl;
         ctx->games.erase(game->pin);
     } else if (!anyConnected) {
-        std::cout << "⏸️ Game " << game->pin << " waiting - all players disconnected but host still connected" << std::endl;
+        std::cout << " Game " << game->pin << " waiting - all players disconnected but host still connected" << std::endl;
     } else {
-        std::cout << "⏳ Game " << game->pin << " active - " << std::count_if(game->players.begin(), game->players.end(), 
+        std::cout << " Game " << game->pin << " active - " << std::count_if(game->players.begin(), game->players.end(), 
                   [](const auto& p) { return p->connected; }) << " player(s) still connected" << std::endl;
     }
     
@@ -1037,7 +1037,7 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
     game->currentPackPlayerId = player->id;
     game->turnStartTime = std::chrono::steady_clock::now();
     
-    std::cout << "📦 Player " << player->name << " selected pack: " << packIt->title << std::endl;
+    std::cout << " Player " << player->name << " selected pack: " << packIt->title << std::endl;
     
     // Send pack selected message to all players
     json packSelectedMsg;
@@ -1053,8 +1053,8 @@ void handleQuestionPackSelection(struct lws* wsi, const std::string& packId, Ser
     if (game->round2Scores.find(player->id) != game->round2Scores.end()) {
         playerRound2Score = game->round2Scores[player->id];
     }
-    std::cout << "📊 Player " << player->name << " (ID: " << player->id << ") current Round 2 score: " << playerRound2Score << std::endl;
-    std::cout << "📊 Total players in round2Scores map: " << game->round2Scores.size() << std::endl;
+    std::cout << " Player " << player->name << " (ID: " << player->id << ") current Round 2 score: " << playerRound2Score << std::endl;
+    std::cout << " Total players in round2Scores map: " << game->round2Scores.size() << std::endl;
     for (const auto& entry : game->round2Scores) {
         std::cout << "   - Player ID " << entry.first << ": " << entry.second << " points" << std::endl;
     }
@@ -1121,7 +1121,7 @@ void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
         return;
     }
     
-    std::cout << "▶️ Host starting questions for pack: " << game->currentPack->title << std::endl;
+    std::cout << " Host starting questions for pack: " << game->currentPack->title << std::endl;
     
     // Reset timer
     game->turnStartTime = std::chrono::steady_clock::now();
@@ -1131,7 +1131,7 @@ void handleStartPackQuestions(struct lws* wsi, ServerContext* ctx) {
     if (game->round2Scores.find(game->currentPackPlayerId) != game->round2Scores.end()) {
         playerRound2Score = game->round2Scores[game->currentPackPlayerId];
     }
-    std::cout << "📊 Pack started for player, current Round 2 score: " << playerRound2Score << std::endl;
+    std::cout << " Pack started for player, current Round 2 score: " << playerRound2Score << std::endl;
     
     // Build host payload with answers
     json hostQuestionsMsg;
@@ -1199,7 +1199,7 @@ void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int ques
     auto player = findPlayerByWsi(game, wsi);
     if (!player) return;
     
-    std::cout << "📝 Player " << player->name << " submitted answer: " << answer << std::endl;
+    std::cout << " Player " << player->name << " submitted answer: " << answer << std::endl;
     
     // Get the correct answer from JSON file
     if (questionIndex < 0 || questionIndex >= static_cast<int>(game->currentPack->questions.size())) {
@@ -1226,7 +1226,7 @@ void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int ques
     }
     
     if (correctAnswer.empty()) {
-        std::cout << "❌ Could not find correct answer for question" << std::endl;
+        std::cout << " Could not find correct answer for question" << std::endl;
         return;
     }
     
@@ -1237,14 +1237,14 @@ void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int ques
     
     bool isCorrect = (playerAnswer == correctAnswer);
     
-    std::cout << "🔍 Auto-check: " << (isCorrect ? "CORRECT" : "INCORRECT") << std::endl;
+    std::cout << " Auto-check: " << (isCorrect ? "CORRECT" : "INCORRECT") << std::endl;
     std::cout << "   Player answer: " << answer << std::endl;
     std::cout << "   Correct answer: " << correctAnswer << std::endl;
     
     // Update score automatically based on auto-check
     if (isCorrect) {
         game->currentPackScore++;
-        std::cout << "✅ Score updated to: " << game->currentPackScore << std::endl;
+        std::cout << " Score updated to: " << game->currentPackScore << std::endl;
     }
     
     // Broadcast the verification result (same as manual verification)
@@ -1260,7 +1260,7 @@ void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int ques
     
     // Check if all questions answered
     if (questionIndex + 1 >= static_cast<int>(game->currentPack->questions.size())) {
-        std::cout << "🎯 Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
+        std::cout << " Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
         
         // Find current player and add score to their Round 2 total
         auto currentPlayer = findPlayerById(game, game->currentPackPlayerId);
@@ -1272,7 +1272,7 @@ void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int ques
         }
         game->round2Scores[game->currentPackPlayerId] += game->currentPackScore;
         
-        std::cout << "📊 " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
+        std::cout << " " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
         
         // Broadcast pack completion
         json completeMsg;
@@ -1304,7 +1304,7 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
     
     if (!game->currentPack) return;
     
-    std::cout << "✅ Host verified answer: " << (isCorrect ? "Correct" : "Incorrect") << std::endl;
+    std::cout << " Host verified answer: " << (isCorrect ? "Correct" : "Incorrect") << std::endl;
     
     // Update score
     if (isCorrect) {
@@ -1321,7 +1321,7 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
     
     // Check if all questions answered
     if (questionIndex + 1 >= static_cast<int>(game->currentPack->questions.size())) {
-        std::cout << "🎯 Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
+        std::cout << " Pack complete! Final score: " << game->currentPackScore << "/" << game->currentPack->questions.size() << std::endl;
         
         // Find current player and add score to their Round 2 total
         auto player = findPlayerById(game, game->currentPackPlayerId);
@@ -1333,7 +1333,7 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
         }
         game->round2Scores[game->currentPackPlayerId] += game->currentPackScore;
         
-        std::cout << "📊 " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
+        std::cout << " " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
         
         // Broadcast pack completion
         json completeMsg;
@@ -1352,32 +1352,32 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
 }
 
 void handleEndPackEarly(struct lws* wsi, ServerContext* ctx) {
-    std::cout << "🔍 handleEndPackEarly called" << std::endl;
+    std::cout << " handleEndPackEarly called" << std::endl;
     
     auto game = findGameByWsi(wsi, ctx);
     if (!game) {
-        std::cout << "❌ Game not found in handleEndPackEarly" << std::endl;
+        std::cout << " Game not found in handleEndPackEarly" << std::endl;
         return;
     }
     
     // Prevent early end if game is finished
     if (game->gameState == "finished") {
-        std::cout << "❌ Game is finished, cannot end pack early" << std::endl;
+        std::cout << " Game is finished, cannot end pack early" << std::endl;
         return;
     }
     
     // Only host can end pack early
     if (game->hostWsi != wsi) {
-        std::cout << "❌ Only host can end pack early" << std::endl;
+        std::cout << " Only host can end pack early" << std::endl;
         return;
     }
     
     if (!game->currentPack) {
-        std::cout << "❌ No pack currently active" << std::endl;
+        std::cout << " No pack currently active" << std::endl;
         return;
     }
     
-    std::cout << "⏹️ Host ending pack early. Current score: " << game->currentPackScore << std::endl;
+    std::cout << " Host ending pack early. Current score: " << game->currentPackScore << std::endl;
     
     // Find current player and add score to their Round 2 total
     auto player = findPlayerById(game, game->currentPackPlayerId);
@@ -1389,7 +1389,7 @@ void handleEndPackEarly(struct lws* wsi, ServerContext* ctx) {
     }
     game->round2Scores[game->currentPackPlayerId] += game->currentPackScore;
     
-    std::cout << "📊 " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
+    std::cout << " " << playerName << "'s Round 2 total: " << game->round2Scores[game->currentPackPlayerId] << std::endl;
     
     // Broadcast pack completion (even though not all questions answered)
     json completeMsg;
@@ -1408,27 +1408,27 @@ void handleEndPackEarly(struct lws* wsi, ServerContext* ctx) {
 }
 
 void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
-    std::cout << "🔍 handleEndTurn called" << std::endl;
+    std::cout << " handleEndTurn called" << std::endl;
     
     auto game = findGameByWsi(wsi, ctx);
     if (!game) {
-        std::cout << "❌ Game not found in handleEndTurn" << std::endl;
+        std::cout << " Game not found in handleEndTurn" << std::endl;
         return;
     }
     
     // Prevent ending turn if game is finished
     if (game->gameState == "finished") {
-        std::cout << "❌ Cannot end turn - game is finished" << std::endl;
+        std::cout << " Cannot end turn - game is finished" << std::endl;
         return;
     }
     
     // Only host can end turn
     if (game->hostWsi != wsi) {
-        std::cout << "❌ Only host can end turn" << std::endl;
+        std::cout << " Only host can end turn" << std::endl;
         return;
     }
     
-    std::cout << "⏹️ Host ended current player's turn" << std::endl;
+    std::cout << " Host ended current player's turn" << std::endl;
     
     // Increment turns completed
     game->round2TurnsCompleted++;
@@ -1436,10 +1436,10 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
     // Check if 2 full cycles are complete (each player gets 2 turns)
     int totalTurnsNeeded = game->round2PlayerOrder.size() * 2;
     
-    std::cout << "📊 Turns completed: " << game->round2TurnsCompleted << "/" << totalTurnsNeeded << std::endl;
+    std::cout << " Turns completed: " << game->round2TurnsCompleted << "/" << totalTurnsNeeded << std::endl;
     
     if (game->round2TurnsCompleted >= totalTurnsNeeded) {
-        std::cout << "🏁 Round 2 complete! Calculating winners..." << std::endl;
+        std::cout << " Round 2 complete! Calculating winners..." << std::endl;
         
         // Set game state to finished
         game->gameState = "finished";
@@ -1465,8 +1465,8 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
         std::string winnerName;
         
         if (tiedPlayerIds.size() > 1) {
-            std::cout << "⚖️ Tie detected! " << tiedPlayerIds.size() << " players with score " << highestScore << std::endl;
-            std::cout << "🏃 Using speed round response time as tiebreaker..." << std::endl;
+            std::cout << " Tie detected! " << tiedPlayerIds.size() << " players with score " << highestScore << std::endl;
+            std::cout << " Using speed round response time as tiebreaker..." << std::endl;
             
             // Find the player with the fastest speed round time
             long fastestTime = LONG_MAX;
@@ -1485,7 +1485,7 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
             auto winner = findPlayerById(game, winnerId);
             if (winner) {
                 winnerName = winner->name;
-                std::cout << "🏆 Tiebreaker winner: " << winnerName << " (fastest: " << fastestTime << "ms)" << std::endl;
+                std::cout << " Tiebreaker winner: " << winnerName << " (fastest: " << fastestTime << "ms)" << std::endl;
             }
         } else {
             // Single winner
@@ -1512,7 +1512,7 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
             }
         }
         
-        std::cout << "🏆 Winner: " << winnerName << " with score: " << highestScore << std::endl;
+        std::cout << " Winner: " << winnerName << " with score: " << highestScore << std::endl;
         
         broadcastToGame(game->pin, gameOverMsg.dump(), nullptr, ctx);
         return;
@@ -1541,9 +1541,9 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
     
     // Send updated packs with next player's turn
     if (!game->round2PlayerOrder.empty()) {
-        std::cout << "📍 Current turn index before increment: " << game->round2CurrentTurnIndex << std::endl;
+        std::cout << " Current turn index before increment: " << game->round2CurrentTurnIndex << std::endl;
         game->round2CurrentTurnIndex = (game->round2CurrentTurnIndex + 1) % game->round2PlayerOrder.size();
-        std::cout << "📍 Moving to turn index: " << game->round2CurrentTurnIndex << " (Player ID: " << game->round2PlayerOrder[game->round2CurrentTurnIndex] << ")" << std::endl;
+        std::cout << " Moving to turn index: " << game->round2CurrentTurnIndex << " (Player ID: " << game->round2PlayerOrder[game->round2CurrentTurnIndex] << ")" << std::endl;
     }
     
     json packsMsg;
@@ -1572,24 +1572,24 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
 }
 
 void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
-    std::cout << "🚪 handleLeaveGame called" << std::endl;
+    std::cout << " handleLeaveGame called" << std::endl;
     
     auto game = findGameByWsi(wsi, ctx);
     if (!game) {
-        std::cout << "❌ Game not found in handleLeaveGame" << std::endl;
+        std::cout << " Game not found in handleLeaveGame" << std::endl;
         return;
     }
     
     // Only players can leave (not host)
     if (game->hostWsi == wsi) {
-        std::cout << "❌ Host cannot leave game mid-game (must use end game)" << std::endl;
+        std::cout << " Host cannot leave game mid-game (must use end game)" << std::endl;
         return;
     }
     
     // Find the player who is leaving
     auto player = findPlayerByWsi(game, wsi);
     if (!player) {
-        std::cout << "❌ Player not found in handleLeaveGame" << std::endl;
+        std::cout << " Player not found in handleLeaveGame" << std::endl;
         return;
     }
     
@@ -1600,7 +1600,7 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
     player->isEliminated = true;
     player->connected = false;
     
-    std::cout << "🚪 Player " << playerName << " (" << playerId << ") has left the game" << std::endl;
+    std::cout << " Player " << playerName << " (" << playerId << ") has left the game" << std::endl;
     
     // Broadcast player elimination to all remaining players
     json eliminationMsg;
@@ -1611,7 +1611,7 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
     
     // If this player was in the middle of a turn, handle that
     if (game->currentPackPlayerId == playerId && game->currentPack) {
-        std::cout << "🔄 Player was active, resetting current pack" << std::endl;
+        std::cout << " Player was active, resetting current pack" << std::endl;
         
         // Add current pack score to their Round 2 total
         if (game->round2Scores.find(playerId) == game->round2Scores.end()) {
@@ -1648,11 +1648,11 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
         }
     }
     
-    std::cout << "📊 Active players remaining: " << activePlayers << std::endl;
+    std::cout << " Active players remaining: " << activePlayers << std::endl;
     
     // If only 1 player left, they are the winner (check in any game state except lobby and finished)
     if (activePlayers == 1 && game->gameState != "lobby" && game->gameState != "finished") {
-        std::cout << "🏆 Only 1 player remaining! " << lastActivePlayerName << " wins!" << std::endl;
+        std::cout << " Only 1 player remaining! " << lastActivePlayerName << " wins!" << std::endl;
         game->gameState = "finished";
         
         json gameOverMsg;
@@ -1663,7 +1663,7 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
         gameOverMsg["message"] = lastActivePlayerName + " is the winner!";
         broadcastToGame(game->pin, gameOverMsg.dump(), nullptr, ctx);
     } else if (activePlayers == 0 && game->gameState != "lobby" && game->gameState != "finished") {
-        std::cout << "🎮 No active players left, ending game" << std::endl;
+        std::cout << " No active players left, ending game" << std::endl;
         game->gameState = "finished";
         
         json gameOverMsg;
@@ -1683,7 +1683,7 @@ void handleEndGame(struct lws* wsi, ServerContext* ctx) {
     
     if (game->hostWsi != wsi) return;
     
-    std::cout << "🎬 Host ending the game" << std::endl;
+    std::cout << " Host ending the game" << std::endl;
     
     json endMsg;
     endMsg["type"] = "game_ended";
@@ -1691,5 +1691,6 @@ void handleEndGame(struct lws* wsi, ServerContext* ctx) {
     
     // Don't erase the game immediately - let it stay until all players disconnect
     // The game will be cleaned up in handleDisconnection when the last player leaves
-    std::cout << "⏸️ Game stored - will be removed when last player disconnects" << std::endl;
+    std::cout << " Game stored - will be removed when last player disconnects" << std::endl;
 }
+

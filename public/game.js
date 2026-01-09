@@ -17,26 +17,26 @@ function connectWebSocket() {
     ws = new WebSocket('ws://localhost:8080');
     
     ws.onopen = () => {
-        console.log('✅ Connected to game server');
+        console.log(' Connected to game server');
     };
     
     ws.onmessage = (event) => {
         try {
             const message = JSON.parse(event.data);
-            console.log('📨 Received:', message);
+            console.log(' Received:', message);
             handleMessage(message);
         } catch (error) {
-            console.error('❌ Error parsing message:', error);
+            console.error(' Error parsing message:', error);
         }
     };
     
     ws.onerror = (error) => {
-        console.error('❌ WebSocket error:', error);
+        console.error(' WebSocket error:', error);
         showError('Connection error. Please try again.');
     };
     
     ws.onclose = () => {
-        console.log('🔌 Disconnected from server');
+        console.log(' Disconnected from server');
         // Only show error if game hasn't ended normally
         if (!gameEnded) {
             showError('Disconnected from server');
@@ -49,7 +49,7 @@ function sendMessage(message) {
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(message));
     } else {
-        console.error('❌ WebSocket not connected');
+        console.error(' WebSocket not connected');
     }
 }
 
@@ -370,10 +370,10 @@ function handleAnswerReceived(message) {
     
     if (message.correct) {
         feedback.classList.add('correct');
-        feedback.textContent = '✅ Correct!';
+        feedback.textContent = ' Correct!';
     } else {
         feedback.classList.add('incorrect');
-        feedback.textContent = '❌ Incorrect';
+        feedback.textContent = ' Incorrect';
     }
     
     feedback.classList.remove('hidden');
@@ -488,15 +488,15 @@ function handleSpeedResults(message) {
     const content = document.getElementById('speed-results-content');
     
     let html = '<div class="leaderboard">';
-    html += '<h3>⚡ Speed Question Results</h3>';
+    html += '<h3> Speed Question Results</h3>';
     html += '<div class="speed-results-header">';
     html += '<p>Round 2 turn order (correct answers play first)</p>';
     html += '</div>';
     html += '<ol class="speed-results-list">';
     
     orderedResults.forEach((result, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
-        const correct = result.correct ? '✅' : '❌';
+        const medal = index === 0 ? '' : index === 1 ? '' : index === 2 ? '' : `#${index + 1}`;
+        const correct = result.correct ? '' : '';
         html += `
             <li class="speed-result-item ${result.correct ? 'correct' : 'incorrect'}">
                 <div class="result-position">
@@ -514,7 +514,7 @@ function handleSpeedResults(message) {
                     <span class="status-text">${result.correct ? 'Correct' : 'Incorrect'}</span>
                 </div>
                 <div class="result-time">
-                    <span class="time-icon">⏱️</span>
+                    <span class="time-icon"></span>
                     <span class="time-value">${result.responseTime.toFixed(2)}s</span>
                 </div>
             </li>
@@ -525,7 +525,7 @@ function handleSpeedResults(message) {
     
     if (message.eliminated) {
         html += `<div class="elimination-notice">
-            <p>⚠️ <strong>${message.eliminated.playerName}</strong> was eliminated</p>
+            <p> <strong>${message.eliminated.playerName}</strong> was eliminated</p>
         </div>`;
     }
     
@@ -547,7 +547,7 @@ function handleSpeedResults(message) {
 function handleTiebreakStart(message) {
     const content = document.getElementById('tiebreak-notice-content');
     html = `<div class="tiebreak-alert">
-        <h3>⚡ Tiebreaker Detected!</h3>
+        <h3> Tiebreaker Detected!</h3>
         <p>${message.tiedPlayerCount} players tied with the same score.</p>
         <p>A speed question will determine who advances...</p>
         <div class="spinner"></div>
@@ -585,8 +585,8 @@ function handleTiebreakResults(message) {
     html += '<ol class="tiebreak-results-list">';
     
     results.forEach((result, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-        const correct = result.correct ? '✅' : '❌';
+        const medal = index === 0 ? '' : index === 1 ? '' : index === 2 ? '' : '';
+        const correct = result.correct ? '' : '';
         html += `
             <li class="tiebreak-result-item ${result.correct ? 'correct' : 'incorrect'}">
                 <span class="medal">${medal}</span>
@@ -602,7 +602,7 @@ function handleTiebreakResults(message) {
     
     if (message.eliminated) {
         html += `<div class="elimination-notice">
-            <p>⚠️ <strong>${message.eliminated.playerName}</strong> has been eliminated!</p>
+            <p> <strong>${message.eliminated.playerName}</strong> has been eliminated!</p>
         </div>`;
         
         // Mark current player as eliminated if they lost the tiebreaker
@@ -637,11 +637,11 @@ function handlePlayerOrder(message) {
     const content = document.getElementById('player-order-content');
     
     let html = '<div class="order-announcement">';
-    html += '<h3>📋 ' + message.message + '</h3>';
+    html += '<h3> ' + message.message + '</h3>';
     html += '<ol class="player-order-list">';
     
     message.order.forEach((player) => {
-        const medal = player.position === 1 ? '🥇' : player.position === 2 ? '🥈' : '🥉';
+        const medal = player.position === 1 ? '' : player.position === 2 ? '' : '';
         html += `
             <li class="order-item">
                 <span class="medal">${medal}</span>
@@ -664,7 +664,7 @@ function handlePlayerOrder(message) {
 function handleRound2QuestionsStart(message) {
     const content = document.getElementById('round2-actual-start');
     html = `<div class="round-transition">
-        <h2>📚 ${message.message}</h2>
+        <h2> ${message.message}</h2>
         <p>Loading question packs...</p>
         <div class="spinner"></div>
     </div>`;
@@ -695,11 +695,11 @@ function handleRound2PacksAvailable(message) {
     // - On non-host: clear flag and process immediately (they're just waiting)
     if (isPackCompleteScreenShowing) {
         if (isHost) {
-            console.log('⚠️ Host: Pack complete screen is showing - storing message for later processing');
+            console.log(' Host: Pack complete screen is showing - storing message for later processing');
             pendingPacksMessage = message;
             return;
         } else {
-            console.log('⚠️ Player: Pack complete screen is showing - clearing flag and processing message');
+            console.log(' Player: Pack complete screen is showing - clearing flag and processing message');
             isPackCompleteScreenShowing = false;
             pendingPacksMessage = null;
         }
@@ -728,11 +728,11 @@ function processPacksMessage(message) {
     // Show current player's turn
     const currentPlayer = round2PlayerOrder[round2CurrentTurnIndex];
     let html = '<div class="round2-header">';
-    html += `<h2>📚 Round 2: Question Packs - Turn-Based Play</h2>`;
+    html += `<h2> Round 2: Question Packs - Turn-Based Play</h2>`;
     html += `<div class="turn-indicator">`;
     if (currentPlayer) {
         const isYourTurn = currentPlayer.playerId === playerId;
-        html += `<p class="turn-text">🎯 ${isYourTurn ? 'YOUR TURN' : "It's " + currentPlayer.playerName + "'s turn"}</p>`;
+        html += `<p class="turn-text"> ${isYourTurn ? 'YOUR TURN' : "It's " + currentPlayer.playerName + "'s turn"}</p>`;
     }
     html += `</div>`;
     html += '</div>';
@@ -744,7 +744,7 @@ function processPacksMessage(message) {
     round2PlayerOrder.forEach((p, idx) => {
         const isCurrent = idx === round2CurrentTurnIndex;
         html += `<li class="turn-order-item ${isCurrent ? 'current' : ''}">`;
-        if (isCurrent) html += '👉 ';
+        if (isCurrent) html += ' ';
         html += `<span class="turn-number">#${idx + 1}</span> ${p.playerName}`;
         html += `</li>`;
     });
@@ -763,11 +763,11 @@ function processPacksMessage(message) {
             <div class="pack-card ${isSelected ? 'selected' : ''} ${isSelectable ? 'selectable' : ''}" data-pack-id="${pack.id}" data-selectable="${isSelectable}">
                 <div class="pack-title">${pack.title}</div>
                 <div class="pack-description">${pack.description}</div>
-                <div class="pack-questions">📝 ${pack.questionCount} questions</div>
+                <div class="pack-questions"> ${pack.questionCount} questions</div>
                 ${isSelectable ? 
                     `<button class="btn btn-secondary pack-select-btn" data-pack-id="${pack.id}">Select</button>` : 
                     ''}
-                ${isSelected ? '<div class="selected-badge">✅ Selected</div>' : ''}
+                ${isSelected ? '<div class="selected-badge"> Selected</div>' : ''}
             </div>
         `;
     });
@@ -841,13 +841,13 @@ function handlePackWaitingHost(message) {
     const content = document.getElementById('pack-waiting-content');
     
     let html = '<div class="pack-waiting-container">';
-    html += `<h2>📦 ${message.packTitle}</h2>`;
+    html += `<h2> ${message.packTitle}</h2>`;
     html += `<p class="pack-selected-by">Selected by: <strong>${message.playerName}</strong></p>`;
     
     if (isHost) {
         html += '<div class="host-start-section">';
         html += '<p class="host-instruction">Ready to start the questions?</p>';
-        html += '<button class="btn btn-primary btn-large start-pack-btn">▶️ Start Questions</button>';
+        html += '<button class="btn btn-primary btn-large start-pack-btn"> Start Questions</button>';
         html += '</div>';
     } else {
         html += '<div class="waiting-message">';
@@ -922,12 +922,12 @@ function displayCurrentPackQuestion() {
         // All questions answered - show complete screen with Next Player button
         const totalScore = playerRound2Score + currentPackScore;
         let html = '<div class="pack-complete-container">';
-        html += `<h2>✅ Pack Complete!</h2>`;
+        html += `<h2> Pack Complete!</h2>`;
         html += `<p class="final-score">Round 2 Total: ${totalScore}</p>`;
         
         html += '<div class="button-group">';
         if (isHost) {
-            html += '<button class="btn btn-primary btn-large next-turn-btn">Next Player →</button>';
+            html += '<button class="btn btn-primary btn-large next-turn-btn">Next Player </button>';
         } else {
             html += '<button class="btn btn-secondary btn-large" disabled>Waiting for host...</button>';
         }
@@ -968,7 +968,7 @@ function displayCurrentPackQuestion() {
     
     let html = '<div class="pack-questions-container">';
     html += `<div class="pack-header">`;
-    html += `<h2>📚 Question Pack</h2>`;
+    html += `<h2> Question Pack</h2>`;
     html += `<p class="current-player-turn">${currentPackPlayer}'s Turn</p>`;
     html += `</div>`;
     
@@ -1012,11 +1012,11 @@ function displayCurrentPackQuestion() {
     // Host controls
     if (isHost) {
         html += '<div class="host-verification-buttons">';
-        html += '<button class="btn btn-success btn-large verify-btn" data-correct="true">✅ Correct (+1)</button>';
-        html += '<button class="btn btn-danger btn-large verify-btn" data-correct="false">❌ Incorrect (+0)</button>';
+        html += '<button class="btn btn-success btn-large verify-btn" data-correct="true"> Correct (+1)</button>';
+        html += '<button class="btn btn-danger btn-large verify-btn" data-correct="false"> Incorrect (+0)</button>';
         html += '</div>';
         html += '<div class="host-end-turn-section">';
-        html += '<button class="btn btn-warning btn-large end-pack-early-btn">⏹️ End Turn Early</button>';
+        html += '<button class="btn btn-warning btn-large end-pack-early-btn"> End Turn Early</button>';
         html += '</div>';
     } else {
         // Player answer input
@@ -1123,7 +1123,7 @@ function handlePlayerAnswerSubmitted(message) {
     const statusEl = document.getElementById('answer-status');
     if (statusEl) {
         const resultClass = message.autoCheckResult ? 'correct-answer' : 'incorrect-answer';
-        const resultText = message.autoCheckResult ? '✅ Correct' : '❌ Incorrect';
+        const resultText = message.autoCheckResult ? ' Correct' : ' Incorrect';
         statusEl.innerHTML = `Auto-check: <strong class="${resultClass}">${resultText}</strong><br>Waiting for host confirmation...`;
     }
     
@@ -1132,7 +1132,7 @@ function handlePlayerAnswerSubmitted(message) {
         const answerReveal = document.querySelector('.question-answer-reveal');
         if (answerReveal) {
             const autoCheckClass = message.autoCheckResult ? 'correct-answer' : 'incorrect-answer';
-            const autoCheckText = message.autoCheckResult ? '✅ CORRECT' : '❌ INCORRECT';
+            const autoCheckText = message.autoCheckResult ? ' CORRECT' : ' INCORRECT';
             answerReveal.innerHTML = `
                 <strong>Player answered:</strong> ${message.answer}
                 <br><strong>Auto-check:</strong> <span class="${autoCheckClass}">${autoCheckText}</span>
@@ -1144,7 +1144,7 @@ function handlePlayerAnswerSubmitted(message) {
 
 // Host ends pack early
 function endPackEarly() {
-    console.log('🛑 Host ending pack early');
+    console.log(' Host ending pack early');
     console.log('Current pack score:', currentPackScore);
     console.log('Current question:', currentPackQuestionIndex + 1);
     
@@ -1156,9 +1156,9 @@ function endPackEarly() {
     const msg = {
         type: 'end_pack_early'
     };
-    console.log('📤 Sending end_pack_early message:', msg);
+    console.log(' Sending end_pack_early message:', msg);
     sendMessage(msg);
-    console.log('✅ Message sent to server');
+    console.log(' Message sent to server');
 }
 
 
@@ -1209,7 +1209,7 @@ function handlePackAnswerVerified(message) {
 
 // Handle pack complete
 function handlePackComplete(message) {
-    console.log('🎉 Pack complete handler called:', message);
+    console.log(' Pack complete handler called:', message);
     
     console.log('Current isHost:', isHost);
     
@@ -1228,14 +1228,14 @@ function handlePackComplete(message) {
     }
     
     let html = '<div class="pack-complete-container">';
-    html += `<h2>✅ Pack Complete!</h2>`;
+    html += `<h2> Pack Complete!</h2>`;
     html += `<p class="pack-player">${message.playerName || currentPackPlayer}</p>`;
     const totalRound2Score = message.totalRound2Score !== undefined ? message.totalRound2Score : (message.score || currentPackScore);
     html += `<p class="final-score">Round 2 Total: ${totalRound2Score}</p>`;
     
     html += '<div class="button-group">';
     if (isHost) {
-        html += '<button class="btn btn-primary btn-large next-turn-btn">Next Player →</button>';
+        html += '<button class="btn btn-primary btn-large next-turn-btn">Next Player </button>';
     } else {
         html += '<button class="btn btn-secondary btn-large" disabled>Waiting for host...</button>';
     }
@@ -1244,7 +1244,7 @@ function handlePackComplete(message) {
     html += '</div>';
     console.log('Generated HTML:', html);
     content.innerHTML = html;
-    console.log('✅ Content innerHTML updated');
+    console.log(' Content innerHTML updated');
     
     // Add event listener for next turn button
     if (isHost) {
@@ -1273,7 +1273,7 @@ function handlePackComplete(message) {
 
 // End turn function
 function endTurn() {
-    console.log('🔄 endTurn() called');
+    console.log(' endTurn() called');
     if (packTimer) {
         clearInterval(packTimer);
     }
@@ -1281,13 +1281,13 @@ function endTurn() {
     const msg = {
         type: 'end_turn'
     };
-    console.log('📤 Sending end_turn message:', msg);
+    console.log(' Sending end_turn message:', msg);
     sendMessage(msg);
 }
 
 // Handle turn ended
 function handleTurnEnded(message) {
-    console.log('📨 Turn ended message received:', message);
+    console.log(' Turn ended message received:', message);
     // Server will send round2_packs_available next with updated turn index
 }
 
@@ -1305,7 +1305,7 @@ function handleGameOver(message) {
     // Handle single winner (when player leaves and only one remains)
     if (message.winner) {
         html += '<div class="winners-section">';
-        html += `<h2>🏆 Winner: ${message.winner}!</h2>`;
+        html += `<h2> Winner: ${message.winner}!</h2>`;
         if (message.message) {
             html += `<p>${message.message}</p>`;
         }
@@ -1318,9 +1318,9 @@ function handleGameOver(message) {
     else if (message.winners && message.winners.length > 0) {
         html += '<div class="winners-section">';
         if (message.winners.length === 1) {
-            html += `<h2>🏆 Winner: ${message.winners[0]}!</h2>`;
+            html += `<h2> Winner: ${message.winners[0]}!</h2>`;
         } else {
-            html += `<h2>🏆 Winners (Tie):</h2>`;
+            html += `<h2> Winners (Tie):</h2>`;
             html += '<ul class="winners-list">';
             message.winners.forEach(winner => {
                 html += `<li>${winner}</li>`;
@@ -1384,7 +1384,7 @@ function handleGameOver(message) {
 function handleRound2Complete(message) {
     const content = document.getElementById('round2-complete-content');
     html = `<div class="round-complete-message">
-        <h2>🎉 ${message.message}</h2>
+        <h2> ${message.message}</h2>
         <p>All question packs have been completed!</p>
     </div>`;
     content.innerHTML = html;
@@ -1414,7 +1414,7 @@ function updatePlayerList() {
         <div class="player-item">
             <span class="player-name">${p.name}</span>
             <span class="player-status ${p.connected ? 'connected' : 'disconnected'}">
-                ${p.connected ? '🟢' : '🔴'}
+                ${p.connected ? '' : ''}
             </span>
         </div>
     `).join('');
@@ -1585,7 +1585,7 @@ function downloadGameLog() {
 
 // Initialize
 window.addEventListener('DOMContentLoaded', () => {
-    console.log('🎮 Quiz Game initialized');
+    console.log(' Quiz Game initialized');
     showScreen('landing-page');
     
     // Landing page buttons
@@ -1661,3 +1661,4 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+

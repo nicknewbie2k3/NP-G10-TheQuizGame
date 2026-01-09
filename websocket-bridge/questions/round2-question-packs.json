@@ -1,7 +1,7 @@
 [
     {
         "id": "pack1",
-        "title": "🌍 Geography Masters",
+        "title": " Geography Masters",
         "description": "World capitals, countries, and landmarks",
         "questions": [
             { "id": "geo1", "text": "What is the capital of Australia?", "answer": "Canberra" },
@@ -13,7 +13,7 @@
     },
     {
         "id": "pack2",
-        "title": "🔬 Science & Nature",
+        "title": " Science & Nature",
         "description": "Biology, chemistry, physics, and natural world",
         "questions": [
             { "id": "sci1", "text": "What gas do plants absorb during photosynthesis?", "answer": "Carbon dioxide" },
@@ -25,7 +25,7 @@
     },
     {
         "id": "pack3",
-        "title": "🎬 Movies & Entertainment",
+        "title": " Movies & Entertainment",
         "description": "Films, actors, directors, and pop culture",
         "questions": [
             { "id": "mov1", "text": "Who directed the movie 'Jaws'?", "answer": "Steven Spielberg" },
@@ -37,7 +37,7 @@
     },
     {
         "id": "pack4",
-        "title": "📚 Literature & Books",
+        "title": " Literature & Books",
         "description": "Classic and modern literature, authors, and stories",
         "questions": [
             { "id": "lit1", "text": "Who wrote 'Pride and Prejudice'?", "answer": "Jane Austen" },
@@ -49,7 +49,7 @@
     },
     {
         "id": "pack5",
-        "title": "🏆 Sports & Games",
+        "title": " Sports & Games",
         "description": "Athletics, competitions, and recreational activities",
         "questions": [
             { "id": "spo1", "text": "How many players are on a basketball team on the court?", "answer": "5" },
@@ -61,7 +61,7 @@
     },
     {
         "id": "pack6",
-        "title": "🎵 Music & Arts",
+        "title": " Music & Arts",
         "description": "Musicians, instruments, paintings, and creative arts",
         "questions": [
             { "id": "mus1", "text": "Which instrument has 88 keys?", "answer": "Piano" },
@@ -73,7 +73,7 @@
     },
     {
         "id": "pack7",
-        "title": "🍕 Food & Drink",
+        "title": " Food & Drink",
         "description": "Cuisine, cooking, beverages, and culinary traditions",
         "questions": [
             { "id": "foo1", "text": "What spice is derived from the Crocus flower?", "answer": "Saffron" },
@@ -85,7 +85,7 @@
     },
     {
         "id": "pack8",
-        "title": "📖 History & Culture",
+        "title": " History & Culture",
         "description": "World history, civilizations, and cultural knowledge",
         "questions": [
             { "id": "his1", "text": "In which year did World War II end?", "answer": "1945" },
@@ -97,7 +97,7 @@
     },
     {
         "id": "pack9",
-        "title": "💻 Technology & Innovation",
+        "title": " Technology & Innovation",
         "description": "Computing, inventions, and modern technology",
         "questions": [
             { "id": "tec1", "text": "Who founded Microsoft?", "answer": "Bill Gates and Paul Allen" },
@@ -109,7 +109,7 @@
     },
     {
         "id": "pack10",
-        "title": "🌟 Pop Culture & Trends",
+        "title": " Pop Culture & Trends",
         "description": "Internet culture, memes, and contemporary phenomena",
         "questions": [
             { "id": "pop1", "text": "What social media platform is known for 280-character messages?", "answer": "Twitter" },
@@ -121,10 +121,10 @@
     },
     {
         "id": "pack11",
-        "title": "🧮 Math & Logic",
+        "title": " Math & Logic",
         "description": "Numbers, equations, puzzles, and logical thinking",
         "questions": [
-            { "id": "mat1", "text": "What is the value of π (pi) to 2 decimal places?", "answer": "3.14" },
+            { "id": "mat1", "text": "What is the value of  (pi) to 2 decimal places?", "answer": "3.14" },
             { "id": "mat2", "text": "What is 15% of 200?", "answer": "30" },
             { "id": "mat3", "text": "How many sides does a hexagon have?", "answer": "6" },
             { "id": "mat4", "text": "What is the square root of 144?", "answer": "12" },
@@ -133,7 +133,7 @@
     },
     {
         "id": "pack12",
-        "title": "🌈 Mixed Trivia",
+        "title": " Mixed Trivia",
         "description": "Random facts, surprising knowledge, and fun trivia",
         "questions": [
             { "id": "mix1", "text": "How many days are there in a leap year?", "answer": "366" },

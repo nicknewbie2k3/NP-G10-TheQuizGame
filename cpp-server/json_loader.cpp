@@ -10,7 +10,7 @@ bool loadQuestionsFromJSON(const std::string& filename, std::vector<Question>& q
     try {
         std::ifstream file(filename);
         if (!file.is_open()) {
-            std::cerr << "⚠️ Could not open " << filename << std::endl;
+            std::cerr << " Could not open " << filename << std::endl;
             return false;
         }
         
@@ -27,10 +27,10 @@ bool loadQuestionsFromJSON(const std::string& filename, std::vector<Question>& q
             questions.push_back(q);
         }
         
-        std::cout << "✅ Loaded " << questions.size() << " questions from " << filename << std::endl;
+        std::cout << " Loaded " << questions.size() << " questions from " << filename << std::endl;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "❌ Error loading questions from " << filename << ": " << e.what() << std::endl;
+        std::cerr << " Error loading questions from " << filename << ": " << e.what() << std::endl;
         return false;
     }
 }
@@ -39,7 +39,7 @@ bool loadSpeedQuestionsFromJSON(const std::string& filename, std::vector<SpeedQu
     try {
         std::ifstream file(filename);
         if (!file.is_open()) {
-            std::cerr << "⚠️ Could not open " << filename << std::endl;
+            std::cerr << " Could not open " << filename << std::endl;
             return false;
         }
         
@@ -54,10 +54,10 @@ bool loadSpeedQuestionsFromJSON(const std::string& filename, std::vector<SpeedQu
             questions.push_back(q);
         }
         
-        std::cout << "✅ Loaded " << questions.size() << " speed questions from " << filename << std::endl;
+        std::cout << " Loaded " << questions.size() << " speed questions from " << filename << std::endl;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "❌ Error loading speed questions from " << filename << ": " << e.what() << std::endl;
+        std::cerr << " Error loading speed questions from " << filename << ": " << e.what() << std::endl;
         return false;
     }
 }
@@ -66,7 +66,7 @@ bool loadQuestionPacksFromJSON(const std::string& filename, std::vector<Question
     try {
         std::ifstream file(filename);
         if (!file.is_open()) {
-            std::cerr << "⚠️ Could not open " << filename << std::endl;
+            std::cerr << " Could not open " << filename << std::endl;
             return false;
         }
         
@@ -91,10 +91,10 @@ bool loadQuestionPacksFromJSON(const std::string& filename, std::vector<Question
             packs.push_back(qp);
         }
         
-        std::cout << "✅ Loaded " << packs.size() << " question packs from " << filename << std::endl;
+        std::cout << " Loaded " << packs.size() << " question packs from " << filename << std::endl;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "❌ Error loading question packs from " << filename << ": " << e.what() << std::endl;
+        std::cerr << " Error loading question packs from " << filename << ": " << e.what() << std::endl;
         return false;
     }
 }
@@ -111,7 +111,7 @@ void createDefaultQuestions(std::vector<Question>& questions) {
 
 void createDefaultSpeedQuestions(std::vector<SpeedQuestion>& questions) {
     questions = {
-        {"speed1", "Type the number: What is 7 × 8?", "56"},
+        {"speed1", "Type the number: What is 7  8?", "56"},
         {"speed2", "Type the city: Capital of Japan?", "tokyo"},
         {"speed3", "Type the number: What is 10 + 15?", "25"}
     };
@@ -120,7 +120,7 @@ void createDefaultSpeedQuestions(std::vector<SpeedQuestion>& questions) {
 void createDefaultQuestionPacks(std::vector<QuestionPack>& packs) {
     QuestionPack pack1;
     pack1.id = "pack1";
-    pack1.title = "🌍 Geography Masters";
+    pack1.title = " Geography Masters";
     pack1.description = "World capitals, countries, and landmarks";
     pack1.questions = {
         {0, "What is the capital of Australia?", {}, -1, 45},
@@ -129,3 +129,4 @@ void createDefaultQuestionPacks(std::vector<QuestionPack>& packs) {
     
     packs.push_back(pack1);
 }
+

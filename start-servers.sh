@@ -8,7 +8,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "🔧 Cleaning up old processes..."
+echo " Cleaning up old processes..."
 
 # Kill any existing game_server or http_server processes
 pkill -f game_server || true
@@ -21,9 +21,9 @@ fuser -k 3001/tcp 2>/dev/null || true
 # Give system time to clean up
 sleep 2
 
-echo "✅ Cleanup complete"
+echo " Cleanup complete"
 echo ""
-echo "🚀 Starting servers..."
+echo " Starting servers..."
 
 cd build
 
@@ -48,16 +48,17 @@ sleep 2
 # Verify servers started
 if [ -f game_server.log ] && ! grep -q "Failed to create libwebsocket context" game_server.log; then
     echo ""
-    echo "✅ Servers started successfully!"
+    echo " Servers started successfully!"
     echo "   Game Server: ws://localhost:8080 (PID: $GAME_PID)"
     echo "   HTTP Server: http://localhost:3001 (PID: $HTTP_PID)"
     echo ""
-    echo "📝 Logs:"
+    echo " Logs:"
     echo "   tail -f game_server.log"
     echo "   tail -f http_server.log"
 else
     echo ""
-    echo "❌ Server startup failed. Check logs:"
+    echo " Server startup failed. Check logs:"
     tail -n 20 game_server.log
     exit 1
 fi
+
