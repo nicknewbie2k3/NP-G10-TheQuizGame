@@ -952,12 +952,39 @@ void handleDisconnection(struct lws* wsi, ServerContext* ctx) {
         player->connected = false;
         player->wsi = nullptr;
         
+        std::cout << "👋 " << player->name << " disconnected" << std::endl;
+        
         json disconnect;
         disconnect["type"] = "player_disconnected";
         disconnect["playerId"] = player->id;
         disconnect["playerName"] = player->name;
         
         broadcastToGame(game->pin, disconnect.dump(), wsi, ctx);
+    }
+    
+    // Check if host disconnected
+    if (game->hostWsi == wsi) {
+        game->hostWsi = nullptr;
+        std::cout << "👋 Host disconnected from game " << game->pin << std::endl;
+    }
+    
+    // Check if all players have disconnected
+    bool anyConnected = false;
+    for (const auto& p : game->players) {
+        if (p->connected) {
+            anyConnected = true;
+            break;
+        }
+    }
+    
+    if (!anyConnected && game->hostWsi == nullptr) {
+        std::cout << "🔴 Game " << game->pin << " abandoned - all clients disconnected. Removing game." << std::endl;
+        ctx->games.erase(game->pin);
+    } else if (!anyConnected) {
+        std::cout << "⏸️ Game " << game->pin << " waiting - all players disconnected but host still connected" << std::endl;
+    } else {
+        std::cout << "⏳ Game " << game->pin << " active - " << std::count_if(game->players.begin(), game->players.end(), 
+                  [](const auto& p) { return p->connected; }) << " player(s) still connected" << std::endl;
     }
     
     ctx->wsToGamePin.erase(wsi);
@@ -1544,6 +1571,108 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx) {
     broadcastToGame(game->pin, packsMsg.dump(), nullptr, ctx);
 }
 
+void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
+    std::cout << "🚪 handleLeaveGame called" << std::endl;
+    
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) {
+        std::cout << "❌ Game not found in handleLeaveGame" << std::endl;
+        return;
+    }
+    
+    // Only players can leave (not host)
+    if (game->hostWsi == wsi) {
+        std::cout << "❌ Host cannot leave game mid-game (must use end game)" << std::endl;
+        return;
+    }
+    
+    // Find the player who is leaving
+    auto player = findPlayerByWsi(game, wsi);
+    if (!player) {
+        std::cout << "❌ Player not found in handleLeaveGame" << std::endl;
+        return;
+    }
+    
+    std::string playerName = player->name;
+    std::string playerId = player->id;
+    
+    // Mark player as eliminated
+    player->isEliminated = true;
+    player->connected = false;
+    
+    std::cout << "🚪 Player " << playerName << " (" << playerId << ") has left the game" << std::endl;
+    
+    // Broadcast player elimination to all remaining players
+    json eliminationMsg;
+    eliminationMsg["type"] = "player_eliminated";
+    eliminationMsg["playerId"] = playerId;
+    eliminationMsg["playerName"] = playerName;
+    broadcastToGame(game->pin, eliminationMsg.dump(), nullptr, ctx);
+    
+    // If this player was in the middle of a turn, handle that
+    if (game->currentPackPlayerId == playerId && game->currentPack) {
+        std::cout << "🔄 Player was active, resetting current pack" << std::endl;
+        
+        // Add current pack score to their Round 2 total
+        if (game->round2Scores.find(playerId) == game->round2Scores.end()) {
+            game->round2Scores[playerId] = 0;
+        }
+        game->round2Scores[playerId] += game->currentPackScore;
+        
+        // Broadcast pack completion
+        json completeMsg;
+        completeMsg["type"] = "pack_complete";
+        completeMsg["playerName"] = playerName;
+        completeMsg["score"] = game->currentPackScore;
+        completeMsg["totalQuestions"] = game->currentPack->questions.size();
+        completeMsg["totalRound2Score"] = game->round2Scores[playerId];
+        completeMsg["playerLeft"] = true;
+        broadcastToGame(game->pin, completeMsg.dump(), nullptr, ctx);
+        
+        // Reset pack state
+        game->currentPack = nullptr;
+        game->currentPackScore = 0;
+        game->currentPackPlayerId = "";
+    }
+    
+    // Check if game should continue or end
+    int activePlayers = 0;
+    std::string lastActivePlayerId;
+    std::string lastActivePlayerName;
+    
+    for (const auto& p : game->players) {
+        if (!p->isEliminated && p->connected) {
+            activePlayers++;
+            lastActivePlayerId = p->id;
+            lastActivePlayerName = p->name;
+        }
+    }
+    
+    std::cout << "📊 Active players remaining: " << activePlayers << std::endl;
+    
+    // If only 1 player left, they are the winner (check in any game state except lobby and finished)
+    if (activePlayers == 1 && game->gameState != "lobby" && game->gameState != "finished") {
+        std::cout << "🏆 Only 1 player remaining! " << lastActivePlayerName << " wins!" << std::endl;
+        game->gameState = "finished";
+        
+        json gameOverMsg;
+        gameOverMsg["type"] = "game_over";
+        gameOverMsg["winner"] = lastActivePlayerName;
+        gameOverMsg["winnerId"] = lastActivePlayerId;
+        gameOverMsg["score"] = game->round2Scores[lastActivePlayerId];
+        gameOverMsg["message"] = lastActivePlayerName + " is the winner!";
+        broadcastToGame(game->pin, gameOverMsg.dump(), nullptr, ctx);
+    } else if (activePlayers == 0 && game->gameState != "lobby" && game->gameState != "finished") {
+        std::cout << "🎮 No active players left, ending game" << std::endl;
+        game->gameState = "finished";
+        
+        json gameOverMsg;
+        gameOverMsg["type"] = "game_over";
+        gameOverMsg["message"] = "All remaining players have left the game.";
+        broadcastToGame(game->pin, gameOverMsg.dump(), nullptr, ctx);
+    }
+}
+
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx) {
     // TODO: Implement host decision logic
 }
@@ -1554,9 +1683,13 @@ void handleEndGame(struct lws* wsi, ServerContext* ctx) {
     
     if (game->hostWsi != wsi) return;
     
+    std::cout << "🎬 Host ending the game" << std::endl;
+    
     json endMsg;
     endMsg["type"] = "game_ended";
     broadcastToGame(game->pin, endMsg.dump(), nullptr, ctx);
     
-    ctx->games.erase(game->pin);
+    // Don't erase the game immediately - let it stay until all players disconnect
+    // The game will be cleaned up in handleDisconnection when the last player leaves
+    std::cout << "⏸️ Game stored - will be removed when last player disconnects" << std::endl;
 }

@@ -7,6 +7,7 @@ let playerName = null;
 let currentQuestion = null;
 let players = [];
 let playerEliminated = false;
+let gameLog = []; // Store game events for logging
 
 // Connect to WebSocket server
 function connectWebSocket() {
@@ -136,6 +137,9 @@ function handleMessage(message) {
         case 'game_over':
             handleGameOver(message);
             break;
+        case 'player_eliminated':
+            handlePlayerEliminated(message);
+            break;
         case 'game_ended':
             handleGameEnded(message);
             break;
@@ -158,6 +162,17 @@ function showHostGame() {
         sendMessage({ type: 'create_game' });
     }
     isHost = true;
+}
+
+// Leave game during gameplay
+function leaveGame() {
+    if (confirm('Are you sure you want to leave the game? You will be eliminated.')) {
+        console.log('Player leaving game...');
+        sendMessage({ type: 'leave_game' });
+        
+        // Show left game screen
+        showScreen('left-game');
+    }
 }
 
 // Show join game
@@ -282,6 +297,7 @@ function endGame() {
 function handleGameCreated(message) {
     currentGamePin = message.gamePin;
     document.getElementById('host-pin').textContent = message.gamePin;
+    logGameEvent('game_created', { gamePin: message.gamePin });
     showScreen('host-lobby');
 }
 
@@ -290,6 +306,7 @@ function handleJoinSuccess(message) {
     playerId = message.playerId;
     currentGamePin = message.gamePin;
     playerName = message.playerName;
+    logGameEvent('player_joined', { playerId, playerName, gamePin: currentGamePin });
     showScreen('player-lobby');
 }
 
@@ -301,6 +318,7 @@ function handlePlayerJoined(message) {
 
 // Handle game started
 function handleGameStarted(message) {
+    logGameEvent('game_started', { timestamp: new Date().toISOString() });
     if (isHost) {
         showScreen('question-screen');
     } else {
@@ -729,6 +747,11 @@ function handleRound2PacksAvailable(message) {
     html += '</div>';
     html += '</div>';
     
+    // Add Leave Game button for players
+    html += '<div class="player-controls-section">';
+    html += '<button type="button" class="btn btn-leave-game" id="leave-round2-packs-btn">Leave Game</button>';
+    html += '</div>';
+    
     content.innerHTML = html;
     showScreen('round2-turnbased-screen');
     
@@ -749,6 +772,12 @@ function handleRound2PacksAvailable(message) {
             selectQuestionPack(packId);
         });
     });
+    
+    // Add Leave Game button listener
+    const leaveRound2PacksBtn = document.getElementById('leave-round2-packs-btn');
+    if (leaveRound2PacksBtn) {
+        leaveRound2PacksBtn.addEventListener('click', leaveGame);
+    }
 }
 
 // Handle question pack selection
@@ -934,6 +963,11 @@ function displayCurrentPackQuestion() {
         html += '</div>';
         html += '<p class="answer-status" id="answer-status"></p>';
         html += '</div>';
+        
+        // Leave Game button for players
+        html += '<div class="player-controls-section">';
+        html += '<button type="button" class="btn btn-leave-game" id="leave-pack-questions-btn">Leave Game</button>';
+        html += '</div>';
     }
     
     html += '</div>';
@@ -975,6 +1009,12 @@ function displayCurrentPackQuestion() {
                     handleSubmit();
                 }
             });
+        }
+        
+        // Add Leave Game button listener
+        const leavePackQuestionsBtn = document.getElementById('leave-pack-questions-btn');
+        if (leavePackQuestionsBtn) {
+            leavePackQuestionsBtn.addEventListener('click', leaveGame);
         }
     }
 }
@@ -1184,8 +1224,20 @@ function handleGameOver(message) {
     
     let html = '<div class="game-over-content">';
     
-    // Show winner(s)
-    if (message.winners && message.winners.length > 0) {
+    // Handle single winner (when player leaves and only one remains)
+    if (message.winner) {
+        html += '<div class="winners-section">';
+        html += `<h2>🏆 Winner: ${message.winner}!</h2>`;
+        if (message.message) {
+            html += `<p>${message.message}</p>`;
+        }
+        if (message.score !== undefined) {
+            html += `<p class="winner-score">Final Score: ${message.score} points</p>`;
+        }
+        html += '</div>';
+    }
+    // Handle multiple winners or tie
+    else if (message.winners && message.winners.length > 0) {
         html += '<div class="winners-section">';
         if (message.winners.length === 1) {
             html += `<h2>🏆 Winner: ${message.winners[0]}!</h2>`;
@@ -1199,6 +1251,12 @@ function handleGameOver(message) {
         }
         html += '</div>';
     }
+    // Handle no winner message
+    else if (message.message) {
+        html += '<div class="winners-section">';
+        html += `<h2>${message.message}</h2>`;
+        html += '</div>';
+    }
     
     // Show final scores
     if (message.finalScores && message.finalScores.length > 0) {
@@ -1210,7 +1268,7 @@ function handleGameOver(message) {
         const sortedScores = message.finalScores.sort((a, b) => b.score - a.score);
         
         sortedScores.forEach((entry, index) => {
-            const isWinner = message.winners.includes(entry.playerName);
+            const isWinner = message.winners && message.winners.includes(entry.playerName);
             html += `<tr class="${isWinner ? 'winner-row' : ''}">`;
             html += `<td class="rank">${index + 1}.</td>`;
             html += `<td class="player-name">${entry.playerName}</td>`;
@@ -1225,6 +1283,22 @@ function handleGameOver(message) {
     html += '</div>';
     
     content.innerHTML = html;
+    
+    // Log game over event
+    logGameEvent('game_over', {
+        winner: message.winner || message.winners,
+        winnerId: message.winnerId,
+        score: message.score,
+        finalScores: message.finalScores,
+        message: message.message
+    });
+    
+    // Show download log button for host
+    const downloadLogBtn = document.getElementById('download-log-btn');
+    if (downloadLogBtn && isHost) {
+        downloadLogBtn.style.display = 'inline-block';
+    }
+    
     showScreen('game-over');
 }
 
@@ -1322,6 +1396,27 @@ function showLanding() {
     showScreen('landing-page');
 }
 
+// Handle player elimination (self or others)
+function handlePlayerEliminated(message) {
+    console.log('Player eliminated:', message);
+    
+    // Log elimination event
+    logGameEvent('player_eliminated', {
+        playerId: message.playerId,
+        playerName: message.playerName
+    });
+    
+    // Show notification about who was eliminated
+    showNotification(`${message.playerName} has been eliminated from the game.`);
+    
+    // If this is the current player, show left game screen
+    if (message.playerId === playerId) {
+        setTimeout(() => {
+            showScreen('left-game');
+        }, 1000);
+    }
+}
+
 // Show error
 function showError(message) {
     alert('Error: ' + message);
@@ -1338,6 +1433,75 @@ function showNotification(message) {
     setTimeout(() => {
         notification.remove();
     }, 3000);
+}
+
+// Log game event
+function logGameEvent(eventType, details) {
+    const timestamp = new Date().toISOString();
+    gameLog.push({
+        timestamp,
+        eventType,
+        details
+    });
+}
+
+// Download game log
+function downloadGameLog() {
+    // Format log as readable text, one line per event
+    let logText = `Game Log - PIN: ${currentGamePin}\n`;
+    logText += `Generated: ${new Date().toISOString()}\n`;
+    logText += `${'='.repeat(80)}\n\n`;
+    
+    gameLog.forEach(event => {
+        const time = new Date(event.timestamp).toLocaleString();
+        let line = `[${time}] ${event.eventType.toUpperCase()}`;
+        
+        // Format details based on event type
+        switch (event.eventType) {
+            case 'game_created':
+                line += ` - Game PIN: ${event.details.gamePin}`;
+                break;
+            case 'player_joined':
+                line += ` - ${event.details.playerName} (ID: ${event.details.playerId})`;
+                break;
+            case 'game_started':
+                line += ` - Game has begun`;
+                break;
+            case 'player_eliminated':
+                line += ` - ${event.details.playerName} (ID: ${event.details.playerId}) was eliminated`;
+                break;
+            case 'game_over':
+                if (event.details.winner) {
+                    line += ` - Winner: ${event.details.winner}`;
+                    if (event.details.score !== undefined) {
+                        line += ` (Score: ${event.details.score})`;
+                    }
+                } else if (event.details.message) {
+                    line += ` - ${event.details.message}`;
+                }
+                break;
+            default:
+                line += ` - ${JSON.stringify(event.details)}`;
+        }
+        
+        logText += line + '\n';
+    });
+    
+    logText += `\n${'='.repeat(80)}\n`;
+    logText += `Total Events: ${gameLog.length}\n`;
+    
+    const dataBlob = new Blob([logText], { type: 'text/plain' });
+    const url = URL.createObjectURL(dataBlob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `game-log-${currentGamePin}-${Date.now()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    console.log('Game log downloaded');
 }
 
 // Initialize
@@ -1376,6 +1540,24 @@ window.addEventListener('DOMContentLoaded', () => {
     // Game over button
     const gameOverHomeBtn = document.getElementById('game-over-home-btn');
     if (gameOverHomeBtn) gameOverHomeBtn.addEventListener('click', showLanding);
+    
+    // Left game button
+    const leftGameHomeBtn = document.getElementById('left-game-home-btn');
+    if (leftGameHomeBtn) leftGameHomeBtn.addEventListener('click', showLanding);
+    
+    // Leave Game buttons
+    const leaveRound1Btn = document.getElementById('leave-round1-btn');
+    if (leaveRound1Btn) leaveRound1Btn.addEventListener('click', leaveGame);
+    
+    const leaveSpeedResultsBtn = document.getElementById('leave-speed-results-btn');
+    if (leaveSpeedResultsBtn) leaveSpeedResultsBtn.addEventListener('click', leaveGame);
+    
+    const leaveTiebreakBtn = document.getElementById('leave-tiebreak-btn');
+    if (leaveTiebreakBtn) leaveTiebreakBtn.addEventListener('click', leaveGame);
+    
+    // Download log button
+    const downloadLogBtn = document.getElementById('download-log-btn');
+    if (downloadLogBtn) downloadLogBtn.addEventListener('click', downloadGameLog);
     
     // Handle form submissions
     document.addEventListener('submit', (e) => {

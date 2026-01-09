@@ -135,6 +135,7 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
 void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int questionIndex, ServerContext* ctx);
 void handleEndPackEarly(struct lws* wsi, ServerContext* ctx);
 void handleEndTurn(struct lws* wsi, ServerContext* ctx);
+void handleLeaveGame(struct lws* wsi, ServerContext* ctx);
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx);
 void handleNextQuestion(struct lws* wsi, ServerContext* ctx);
 void handleNextRound(struct lws* wsi, ServerContext* ctx);

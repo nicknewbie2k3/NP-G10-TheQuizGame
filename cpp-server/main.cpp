@@ -76,6 +76,9 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                 else if (type == "end_turn") {
                     handleEndTurn(wsi, ctx);
                 }
+                else if (type == "leave_game") {
+                    handleLeaveGame(wsi, ctx);
+                }
                 else if (type == "host_decision") {
                     handleHostDecision(wsi, msg["givePoints"], ctx);
                 }
