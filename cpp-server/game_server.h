@@ -90,6 +90,7 @@ struct Game {
     std::map<std::string, int> round2Scores; // Track each player's Round 2 total score
     int round2TurnsCompleted; // Track total turns completed
     std::map<std::string, long> speedOrderTimes; // Store speed round response times for tiebreaking
+    std::string currentSpeedQuestionId; // Store ID of current speed question for answer validation
     
     // Timing
     std::chrono::steady_clock::time_point turnStartTime;
@@ -125,7 +126,7 @@ void handleCreateGame(struct lws* wsi, ServerContext* ctx);
 void handleJoinGame(struct lws* wsi, const std::string& gamePin, const std::string& playerName, ServerContext* ctx);
 void handleStartGame(struct lws* wsi, ServerContext* ctx);
 void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerContext* ctx);
-void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, ServerContext* ctx);
+void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, long responseTime, ServerContext* ctx);
 void handleTiebreakAnswer(struct lws* wsi, const std::string& answer, ServerContext* ctx);
 void handleContinueToRound2(struct lws* wsi, ServerContext* ctx);
 void handleContinueFromSpeedOrder(struct lws* wsi, ServerContext* ctx);

@@ -47,7 +47,8 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                     handleSubmitAnswer(wsi, msg["questionId"], msg["answer"], ctx);
                 }
                 else if (type == "submit_speed_answer") {
-                    handleSpeedAnswer(wsi, msg["questionId"], msg["answer"], ctx);
+                    long responseTime = msg.value("responseTime", 0);
+                    handleSpeedAnswer(wsi, msg["questionId"], msg["answer"], responseTime, ctx);
                 }
                 else if (type == "submit_tiebreak_answer") {
                     handleTiebreakAnswer(wsi, msg["answer"], ctx);

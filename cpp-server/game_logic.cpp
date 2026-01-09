@@ -144,31 +144,62 @@ void handleJoinGame(struct lws* wsi, const std::string& gamePin, const std::stri
     
     auto game = it->second;
     
-    // Check if name is taken
+    // Check if name is taken by an online player, or allow reconnecting to offline player
+    std::shared_ptr<Player> offlinePlayer = nullptr;
     for (const auto& p : game->players) {
         if (p->name == playerName) {
-            json response;
-            response["type"] = "error";
-            response["message"] = "Player name already taken";
-            sendToClient(wsi, response.dump());
-            return;
+            if (p->connected) {
+                // Name taken by online player
+                json response;
+                response["type"] = "error";
+                response["message"] = "Player name already taken";
+                sendToClient(wsi, response.dump());
+                return;
+            } else if (game->gameState == "lobby") {
+                // Allow reconnecting to offline player in lobby
+                offlinePlayer = p;
+                break;
+            } else {
+                // After game started, don't allow reconnecting
+                json response;
+                response["type"] = "error";
+                response["message"] = "Player name already taken";
+                sendToClient(wsi, response.dump());
+                return;
+            }
         }
     }
     
-    // Create player
-    auto player = std::make_shared<Player>();
-    player->id = generateGamePin(); // Use same function for unique ID
-    player->name = playerName;
-    player->wsi = wsi;
-    player->connected = true;
-    player->hasAnswered = false;
-    player->isEliminated = false;
-    player->score = 0;
-    player->roundScore = 0;
+    std::shared_ptr<Player> player;
     
-    game->players.push_back(player);
-    ctx->wsToGamePin[wsi] = gamePin;
-    ctx->wsToPlayerId[wsi] = player->id;
+    if (offlinePlayer) {
+        // Reconnect to existing offline player
+        player = offlinePlayer;
+        player->wsi = wsi;
+        player->connected = true;
+        
+        ctx->wsToGamePin[wsi] = gamePin;
+        ctx->wsToPlayerId[wsi] = player->id;
+        
+        std::cout << " Player '" << playerName << "' reconnected to game " << gamePin << std::endl;
+    } else {
+        // Create new player
+        player = std::make_shared<Player>();
+        player->id = generateGamePin(); // Use same function for unique ID
+        player->name = playerName;
+        player->wsi = wsi;
+        player->connected = true;
+        player->hasAnswered = false;
+        player->isEliminated = false;
+        player->score = 0;
+        player->roundScore = 0;
+        
+        game->players.push_back(player);
+        ctx->wsToGamePin[wsi] = gamePin;
+        ctx->wsToPlayerId[wsi] = player->id;
+        
+        std::cout << " Player '" << playerName << "' joined game " << gamePin << std::endl;
+    }
     
     // Send join confirmation to player
     json joinResponse;
@@ -210,10 +241,18 @@ void handleStartGame(struct lws* wsi, ServerContext* ctx) {
         return;
     }
     
-    if (game->players.size() < 2) {
+    // Count connected players
+    int connectedCount = 0;
+    for (const auto& p : game->players) {
+        if (p->connected) {
+            connectedCount++;
+        }
+    }
+    
+    if (connectedCount < 2) {
         json response;
         response["type"] = "error";
-        response["message"] = "Need at least 2 players to start";
+        response["message"] = "Need at least 2 online players to start";
         sendToClient(wsi, response.dump());
         return;
     }
@@ -376,7 +415,14 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
                 
                 // Send speed question to all players
                 if (!ctx->speedQuestions.empty()) {
-                    const auto& sq = ctx->speedQuestions[0];
+                    std::random_device rd;
+                    std::mt19937 g(rd());
+                    std::uniform_int_distribution<> dis(0, ctx->speedQuestions.size() - 1);
+                    int randomIndex = dis(g);
+                    const auto& sq = ctx->speedQuestions[randomIndex];
+                    
+                    game->currentSpeedQuestionId = sq.id;
+                    
                     json speedQ;
                     speedQ["type"] = "tiebreak_question";
                     speedQ["question"]["id"] = sq.id;
@@ -471,7 +517,14 @@ void handleNextRound(struct lws* wsi, ServerContext* ctx) {
         
         // Send speed question
         if (!ctx->speedQuestions.empty()) {
-            const auto& sq = ctx->speedQuestions[0];
+            std::random_device rd;
+            std::mt19937 g(rd());
+            std::uniform_int_distribution<> dis(0, ctx->speedQuestions.size() - 1);
+            int randomIndex = dis(g);
+            const auto& sq = ctx->speedQuestions[randomIndex];
+            
+            game->currentSpeedQuestionId = sq.id;
+            
             json speedQ;
             speedQ["type"] = "speed_question";
             speedQ["question"]["id"] = sq.id;
@@ -482,7 +535,7 @@ void handleNextRound(struct lws* wsi, ServerContext* ctx) {
     }
 }
 
-void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, ServerContext* ctx) {
+void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std::string& answer, long responseTime, ServerContext* ctx) {
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;
     
@@ -498,16 +551,14 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         return;
     }
 
-    auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - game->turnStartTime).count();
-    
-    game->speedResponses[player->id] = {answer, elapsed};
+    // Use client-provided response time (in milliseconds)
+    game->speedResponses[player->id] = {answer, responseTime};
     
     json response;
     response["type"] = "speed_answer_received";
     sendToClient(wsi, response.dump());
     
-    std::cout << " Speed answer from " << player->name << ": " << answer << " (" << elapsed << "ms)" << std::endl;
+    std::cout << " Speed answer from " << player->name << ": " << answer << " (" << responseTime << "ms)" << std::endl;
     
     // Check if all active players have answered
     size_t activePlayerCount = 0;
@@ -521,10 +572,13 @@ void handleSpeedAnswer(struct lws* wsi, const std::string& questionId, const std
         // All players have answered - send results
         std::cout << " All players answered speed question, sending results..." << std::endl;
         
-        // Get the correct answer (assuming first speed question for now)
+        // Get the correct answer using stored speed question ID
         std::string correctAnswer = "";
-        if (!ctx->speedQuestions.empty()) {
-            correctAnswer = ctx->speedQuestions[0].correctAnswer;
+        for (const auto& sq : ctx->speedQuestions) {
+            if (sq.id == game->currentSpeedQuestionId) {
+                correctAnswer = sq.correctAnswer;
+                break;
+            }
         }
         
         // Build results array sorted by response time
@@ -1596,7 +1650,32 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
     std::string playerName = player->name;
     std::string playerId = player->id;
     
-    // Mark player as eliminated
+    // If game is still in lobby, just mark as disconnected (not eliminated)
+    if (game->gameState == "lobby") {
+        player->connected = false;
+        
+        std::cout << " Player " << playerName << " " << playerId << ") disconnected from lobby" << std::endl;
+        
+        // Broadcast updated player list
+        json playerList = json::array();
+        for (const auto& p : game->players) {
+            json pObj;
+            pObj["id"] = p->id;
+            pObj["name"] = p->name;
+            pObj["connected"] = p->connected;
+            playerList.push_back(pObj);
+        }
+        
+        json broadcast;
+        broadcast["type"] = "player_joined";
+        broadcast["playerName"] = playerName;
+        broadcast["players"] = playerList;
+        
+        broadcastToGame(game->pin, broadcast.dump(), nullptr, ctx);
+        return;
+    }
+    
+    // Mark player as eliminated if game has started
     player->isEliminated = true;
     player->connected = false;
     

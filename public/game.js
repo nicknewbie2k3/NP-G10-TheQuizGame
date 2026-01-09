@@ -11,6 +11,7 @@ let gameLog = []; // Store game events for logging
 let isPackCompleteScreenShowing = false; // Flag to prevent screen switching while pack complete is displayed
 let pendingPacksMessage = null; // Store pending round2_packs_available message to process after pack-complete
 let gameEnded = false; // Flag to track if game ended normally (not a disconnect error)
+let speedQuestionStartTime = null; // Track when speed question started for response time calculation
 
 // Connect to WebSocket server
 function connectWebSocket() {
@@ -255,13 +256,17 @@ function submitSpeedAnswer(event) {
         return;
     }
     
+    // Calculate response time in milliseconds
+    const responseTime = speedQuestionStartTime ? Date.now() - speedQuestionStartTime : 0;
+    
     sendMessage({
         type: 'submit_speed_answer',
         questionId: currentQuestion.id,
-        answer: answer
+        answer: answer,
+        responseTime: responseTime
     });
     
-    console.log('Speed answer submitted:', answer);
+    console.log('Speed answer submitted:', answer, 'Response time:', responseTime, 'ms');
 }
 
 function submitTiebreakAnswer(event) {
@@ -456,10 +461,19 @@ function handleSpeedQuestion(message) {
     const question = message.question;
     currentQuestion = question;
     
+    // Record the start time for response time tracking
+    speedQuestionStartTime = Date.now();
+    
     document.getElementById('speed-question-text').textContent = question.text;
     document.getElementById('speed-answer-input').value = '';
     document.getElementById('speed-answer-input').focus();
     document.getElementById('speed-waiting').style.display = 'none';
+    
+    // Stop any running timer (speed questions have no time limit)
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
     
     showScreen('speed-question-screen');
 }
@@ -1413,8 +1427,8 @@ function updatePlayerList() {
     const html = players.map(p => `
         <div class="player-item">
             <span class="player-name">${p.name}</span>
-            <span class="player-status ${p.connected ? 'connected' : 'disconnected'}">
-                ${p.connected ? '' : ''}
+            <span class="player-status ${p.connected ? 'status-online' : 'status-offline'}">
+                ${p.connected ? 'Online' : 'Offline'}
             </span>
         </div>
     `).join('');
@@ -1423,9 +1437,17 @@ function updatePlayerList() {
     if (lobbyListElement) lobbyListElement.innerHTML = html;
     if (count) count.textContent = players.length;
     
-    // Enable start button if at least 2 players
-    if (isHost && players.length >= 2) {
-        document.getElementById('start-btn').disabled = false;
+    // Count online players
+    const onlinePlayers = players.filter(p => p.connected).length;
+    
+    // Enable start button if at least 2 online players
+    if (isHost) {
+        const startBtn = document.getElementById('start-btn');
+        if (onlinePlayers >= 2) {
+            startBtn.disabled = false;
+        } else {
+            startBtn.disabled = true;
+        }
     }
 }
 
@@ -1625,6 +1647,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (leftGameHomeBtn) leftGameHomeBtn.addEventListener('click', showLanding);
     
     // Leave Game buttons
+    const leaveLobbyBtn = document.getElementById('leave-lobby-btn');
+    if (leaveLobbyBtn) leaveLobbyBtn.addEventListener('click', leaveGame);
+    
     const leaveRound1Btn = document.getElementById('leave-round1-btn');
     if (leaveRound1Btn) leaveRound1Btn.addEventListener('click', leaveGame);
     
