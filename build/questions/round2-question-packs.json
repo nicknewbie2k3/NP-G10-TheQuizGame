@@ -2,145 +2,205 @@
     {
         "id": "pack1",
         "title": " Geography Masters",
-        "description": "World capitals, countries, and landmarks",
+        "description": "",
         "questions": [
             { "id": "geo1", "text": "What is the capital of Australia?", "answer": "Canberra" },
             { "id": "geo2", "text": "Which country has the most time zones?", "answer": "France" },
             { "id": "geo3", "text": "What is the smallest country in the world?", "answer": "Vatican City" },
             { "id": "geo4", "text": "Which river flows through Egypt?", "answer": "Nile" },
-            { "id": "geo5", "text": "What is the highest mountain in Africa?", "answer": "Mount Kilimanjaro" }
+            { "id": "geo5", "text": "What is the highest mountain in Africa?", "answer": "Mount Kilimanjaro" },
+            { "id": "geo6", "text": "Which ocean is the largest?", "answer": "Pacific Ocean" },
+            { "id": "geo7", "text": "What is the capital of Canada?", "answer": "Ottawa" },
+            { "id": "geo8", "text": "Which desert is the largest in the world?", "answer": "Sahara Desert" },
+            { "id": "geo9", "text": "In which country would you find the Great Barrier Reef?", "answer": "Australia" },
+            { "id": "geo10", "text": "What is the longest river in the world?", "answer": "Amazon River" }
         ]
     },
     {
         "id": "pack2",
         "title": " Science & Nature",
-        "description": "Biology, chemistry, physics, and natural world",
+        "description": "",
         "questions": [
             { "id": "sci1", "text": "What gas do plants absorb during photosynthesis?", "answer": "Carbon dioxide" },
             { "id": "sci2", "text": "How many bones are in an adult human body?", "answer": "206" },
             { "id": "sci3", "text": "What is the chemical symbol for gold?", "answer": "Au" },
             { "id": "sci4", "text": "Which planet is closest to the sun?", "answer": "Mercury" },
-            { "id": "sci5", "text": "What type of animal is a whale?", "answer": "Mammal" }
+            { "id": "sci5", "text": "What type of animal is a whale?", "answer": "Mammal" },
+            { "id": "sci6", "text": "What is the speed of light in a vacuum?", "answer": "299,792,458 meters per second" },
+            { "id": "sci7", "text": "What is the chemical formula for water?", "answer": "H2O" },
+            { "id": "sci8", "text": "How many chromosomes do humans have?", "answer": "46" },
+            { "id": "sci9", "text": "What is the most abundant gas in Earth's atmosphere?", "answer": "Nitrogen" },
+            { "id": "sci10", "text": "What is the powerhouse of the cell?", "answer": "Mitochondria" }
         ]
     },
     {
         "id": "pack3",
         "title": " Movies & Entertainment",
-        "description": "Films, actors, directors, and pop culture",
+        "description": "",
         "questions": [
             { "id": "mov1", "text": "Who directed the movie 'Jaws'?", "answer": "Steven Spielberg" },
             { "id": "mov2", "text": "Which movie won the Oscar for Best Picture in 2020?", "answer": "Parasite" },
             { "id": "mov3", "text": "What is the highest-grossing film of all time?", "answer": "Avatar" },
             { "id": "mov4", "text": "Who played Jack in Titanic?", "answer": "Leonardo DiCaprio" },
-            { "id": "mov5", "text": "Which Disney movie features the song 'Let It Go'?", "answer": "Frozen" }
+            { "id": "mov5", "text": "Which Disney movie features the song 'Let It Go'?", "answer": "Frozen" },
+            { "id": "mov6", "text": "Which actor played Iron Man in the Marvel Cinematic Universe?", "answer": "Robert Downey Jr." },
+            { "id": "mov7", "text": "What year was the first Star Wars movie released?", "answer": "1977" },
+            { "id": "mov8", "text": "Who directed The Dark Knight?", "answer": "Christopher Nolan" },
+            { "id": "mov9", "text": "Which movie features the quote 'Here's looking at you, kid'?", "answer": "Casablanca" },
+            { "id": "mov10", "text": "What is the name of the hobbit played by Elijah Wood in Lord of the Rings?", "answer": "Frodo Baggins" }
         ]
     },
     {
         "id": "pack4",
         "title": " Literature & Books",
-        "description": "Classic and modern literature, authors, and stories",
+        "description": "",
         "questions": [
             { "id": "lit1", "text": "Who wrote 'Pride and Prejudice'?", "answer": "Jane Austen" },
             { "id": "lit2", "text": "What is the first book in the Harry Potter series?", "answer": "Harry Potter and the Philosopher's Stone" },
             { "id": "lit3", "text": "Who wrote '1984'?", "answer": "George Orwell" },
             { "id": "lit4", "text": "What is the first line of 'A Tale of Two Cities'?", "answer": "It was the best of times, it was the worst of times" },
-            { "id": "lit5", "text": "Who wrote 'The Great Gatsby'?", "answer": "F. Scott Fitzgerald" }
+            { "id": "lit5", "text": "Who wrote 'The Great Gatsby'?", "answer": "F. Scott Fitzgerald" },
+            { "id": "lit6", "text": "Who wrote 'Romeo and Juliet'?", "answer": "William Shakespeare" },
+            { "id": "lit7", "text": "What is the name of the wizard in 'The Hobbit'?", "answer": "Gandalf" },
+            { "id": "lit8", "text": "Who wrote 'To Kill a Mockingbird'?", "answer": "Harper Lee" },
+            { "id": "lit9", "text": "In which country is 'The Kite Runner' set?", "answer": "Afghanistan" },
+            { "id": "lit10", "text": "Who wrote 'The Odyssey'?", "answer": "Homer" }
         ]
     },
     {
         "id": "pack5",
         "title": " Sports & Games",
-        "description": "Athletics, competitions, and recreational activities",
+        "description": "",
         "questions": [
             { "id": "spo1", "text": "How many players are on a basketball team on the court?", "answer": "5" },
             { "id": "spo2", "text": "In which sport would you perform a slam dunk?", "answer": "Basketball" },
             { "id": "spo3", "text": "What is the maximum score possible in ten-pin bowling?", "answer": "300" },
             { "id": "spo4", "text": "Which country hosted the 2016 Summer Olympics?", "answer": "Brazil" },
-            { "id": "spo5", "text": "How many holes are there on a standard golf course?", "answer": "18" }
+            { "id": "spo5", "text": "How many holes are there on a standard golf course?", "answer": "18" },
+            { "id": "spo6", "text": "Which sport is known as 'the beautiful game'?", "answer": "Football (Soccer)" },
+            { "id": "spo7", "text": "How many Grand Slam tournaments are there in tennis?", "answer": "4" },
+            { "id": "spo8", "text": "What is the national sport of Canada?", "answer": "Lacrosse" },
+            { "id": "spo9", "text": "How many players are on a soccer team on the field?", "answer": "11" },
+            { "id": "spo10", "text": "In which sport would you perform a 'butterfly stroke'?", "answer": "Swimming" }
         ]
     },
     {
         "id": "pack6",
         "title": " Music & Arts",
-        "description": "Musicians, instruments, paintings, and creative arts",
+        "description": "",
         "questions": [
             { "id": "mus1", "text": "Which instrument has 88 keys?", "answer": "Piano" },
             { "id": "mus2", "text": "Who composed 'The Four Seasons'?", "answer": "Vivaldi" },
             { "id": "mus3", "text": "What does 'forte' mean in music?", "answer": "Loud" },
             { "id": "mus4", "text": "Which artist painted 'Starry Night'?", "answer": "Vincent van Gogh" },
-            { "id": "mus5", "text": "How many strings does a standard guitar have?", "answer": "6" }
+            { "id": "mus5", "text": "How many strings does a standard guitar have?", "answer": "6" },
+            { "id": "mus6", "text": "Who is known as the 'King of Pop'?", "answer": "Michael Jackson" },
+            { "id": "mus7", "text": "Which band released the album 'Abbey Road'?", "answer": "The Beatles" },
+            { "id": "mus8", "text": "What is the highest female singing voice?", "answer": "Soprano" },
+            { "id": "mus9", "text": "Who painted the Mona Lisa?", "answer": "Leonardo da Vinci" },
+            { "id": "mus10", "text": "How many symphonies did Beethoven compose?", "answer": "9" }
         ]
     },
     {
         "id": "pack7",
         "title": " Food & Drink",
-        "description": "Cuisine, cooking, beverages, and culinary traditions",
+        "description": "",
         "questions": [
             { "id": "foo1", "text": "What spice is derived from the Crocus flower?", "answer": "Saffron" },
             { "id": "foo2", "text": "Which country is famous for inventing pizza?", "answer": "Italy" },
             { "id": "foo3", "text": "What is the main ingredient in guacamole?", "answer": "Avocado" },
             { "id": "foo4", "text": "Which wine is traditionally used in a Mimosa cocktail?", "answer": "Champagne" },
-            { "id": "foo5", "text": "What type of pastry is used to make profiteroles?", "answer": "Choux pastry" }
+            { "id": "foo5", "text": "What type of pastry is used to make profiteroles?", "answer": "Choux pastry" },
+            { "id": "foo6", "text": "What is the main ingredient in hummus?", "answer": "Chickpeas" },
+            { "id": "foo7", "text": "Which country is the origin of sushi?", "answer": "Japan" },
+            { "id": "foo8", "text": "What type of pasta is shaped like little ears?", "answer": "Orecchiette" },
+            { "id": "foo9", "text": "What is the hottest part of a chili pepper?", "answer": "The seeds and inner membrane" },
+            { "id": "foo10", "text": "What is the main ingredient in a traditional Greek tzatziki sauce?", "answer": "Yogurt" }
         ]
     },
     {
         "id": "pack8",
         "title": " History & Culture",
-        "description": "World history, civilizations, and cultural knowledge",
+        "description": "",
         "questions": [
             { "id": "his1", "text": "In which year did World War II end?", "answer": "1945" },
             { "id": "his2", "text": "Who was the first person to walk on the moon?", "answer": "Neil Armstrong" },
             { "id": "his3", "text": "Which ancient wonder of the world was located in Alexandria?", "answer": "The Lighthouse of Alexandria" },
             { "id": "his4", "text": "Who was the first President of the United States?", "answer": "George Washington" },
-            { "id": "his5", "text": "In which year did the Berlin Wall fall?", "answer": "1989" }
+            { "id": "his5", "text": "In which year did the Berlin Wall fall?", "answer": "1989" },
+            { "id": "his6", "text": "Which ancient civilization built Machu Picchu?", "answer": "The Incas" },
+            { "id": "his7", "text": "In which year did the Titanic sink?", "answer": "1912" },
+            { "id": "his8", "text": "Who was the first female Prime Minister of the United Kingdom?", "answer": "Margaret Thatcher" },
+            { "id": "his9", "text": "Which empire was ruled by Julius Caesar?", "answer": "Roman Empire" },
+            { "id": "his10", "text": "What year did the American Civil War begin?", "answer": "1861" }
         ]
     },
     {
         "id": "pack9",
         "title": " Technology & Innovation",
-        "description": "Computing, inventions, and modern technology",
+        "description": "",
         "questions": [
             { "id": "tec1", "text": "Who founded Microsoft?", "answer": "Bill Gates and Paul Allen" },
             { "id": "tec2", "text": "What does 'HTTP' stand for?", "answer": "HyperText Transfer Protocol" },
             { "id": "tec3", "text": "Which company created the iPhone?", "answer": "Apple" },
             { "id": "tec4", "text": "What year was the World Wide Web invented?", "answer": "1989" },
-            { "id": "tec5", "text": "What does 'AI' stand for?", "answer": "Artificial Intelligence" }
+            { "id": "tec5", "text": "What does 'AI' stand for?", "answer": "Artificial Intelligence" },
+            { "id": "tec6", "text": "Who is the founder of Tesla and SpaceX?", "answer": "Elon Musk" },
+            { "id": "tec7", "text": "What does 'URL' stand for?", "answer": "Uniform Resource Locator" },
+            { "id": "tec8", "text": "Which programming language is named after a type of Indonesian coffee?", "answer": "Java" },
+            { "id": "tec9", "text": "What does 'GPU' stand for?", "answer": "Graphics Processing Unit" },
+            { "id": "tec10", "text": "Who invented the telephone?", "answer": "Alexander Graham Bell" }
         ]
     },
     {
         "id": "pack10",
         "title": " Pop Culture & Trends",
-        "description": "Internet culture, memes, and contemporary phenomena",
+        "description": "",
         "questions": [
             { "id": "pop1", "text": "What social media platform is known for 280-character messages?", "answer": "Twitter" },
             { "id": "pop2", "text": "Which video became the first to reach 1 billion views on YouTube?", "answer": "Gangnam Style" },
             { "id": "pop3", "text": "What does 'LOL' stand for?", "answer": "Laugh Out Loud" },
             { "id": "pop4", "text": "Which app is known for disappearing messages?", "answer": "Snapchat" },
-            { "id": "pop5", "text": "What is the most popular video game of 2020-2021?", "answer": "Among Us" }
+            { "id": "pop5", "text": "What is the most popular video game of 2020-2021?", "answer": "Among Us" },
+            { "id": "pop6", "text": "Which social media platform was originally called 'Musical.ly'?", "answer": "TikTok" },
+            { "id": "pop7", "text": "What does 'FOMO' stand for?", "answer": "Fear Of Missing Out" },
+            { "id": "pop8", "text": "Which streaming service created 'Stranger Things'?", "answer": "Netflix" },
+            { "id": "pop9", "text": "What is the name of the virtual reality headset made by Meta (Facebook)?", "answer": "Oculus" },
+            { "id": "pop10", "text": "Which K-pop group performed 'Dynamite' in English?", "answer": "BTS" }
         ]
     },
     {
         "id": "pack11",
         "title": " Math & Logic",
-        "description": "Numbers, equations, puzzles, and logical thinking",
+        "description": "",
         "questions": [
             { "id": "mat1", "text": "What is the value of  (pi) to 2 decimal places?", "answer": "3.14" },
             { "id": "mat2", "text": "What is 15% of 200?", "answer": "30" },
             { "id": "mat3", "text": "How many sides does a hexagon have?", "answer": "6" },
             { "id": "mat4", "text": "What is the square root of 144?", "answer": "12" },
-            { "id": "mat5", "text": "In a right triangle, what is the longest side called?", "answer": "Hypotenuse" }
+            { "id": "mat5", "text": "In a right triangle, what is the longest side called?", "answer": "Hypotenuse" },
+            { "id": "mat6", "text": "What is 7 x 8?", "answer": "56" },
+            { "id": "mat7", "text": "What is the next prime number after 7?", "answer": "11" },
+            { "id": "mat8", "text": "What is the sum of the angles in a triangle?", "answer": "180 degrees" },
+            { "id": "mat9", "text": "What is 25% of 80?", "answer": "20" },
+            { "id": "mat10", "text": "How many degrees are in a circle?", "answer": "360" }
         ]
     },
     {
         "id": "pack12",
-        "title": " Mixed Trivia",
-        "description": "Random facts, surprising knowledge, and fun trivia",
+        "title": "???",
+        "description": "Pick it and you will find out.",
         "questions": [
             { "id": "mix1", "text": "How many days are there in a leap year?", "answer": "366" },
             { "id": "mix2", "text": "What is the hardest natural substance on Earth?", "answer": "Diamond" },
             { "id": "mix3", "text": "Which mammal is known to have the most powerful bite?", "answer": "Hippopotamus" },
             { "id": "mix4", "text": "What is the smallest bone in the human body?", "answer": "Stapes (in the ear)" },
-            { "id": "mix5", "text": "How many hearts does an octopus have?", "answer": "3" }
+            { "id": "mix5", "text": "How many hearts does an octopus have?", "answer": "3" },
+            { "id": "mix6", "text": "What is the national animal of Scotland?", "answer": "Unicorn" },
+            { "id": "mix7", "text": "How many teeth does an adult human have?", "answer": "32" },
+            { "id": "mix8", "text": "What is the largest organ in the human body?", "answer": "Skin" },
+            { "id": "mix9", "text": "How many minutes are in a full week?", "answer": "10,080" },
+            { "id": "mix10", "text": "What color is a polar bear's skin?", "answer": "Black" }
         ]
     }
 ]
