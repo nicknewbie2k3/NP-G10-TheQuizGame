@@ -139,6 +139,7 @@ void handleEndTurn(struct lws* wsi, ServerContext* ctx);
 void handleLeaveGame(struct lws* wsi, ServerContext* ctx);
 void handleHostDecision(struct lws* wsi, bool givePoints, ServerContext* ctx);
 void handleNextQuestion(struct lws* wsi, ServerContext* ctx);
+void handleShowAnswer(struct lws* wsi, ServerContext* ctx);
 void handleNextRound(struct lws* wsi, ServerContext* ctx);
 void handleEndGame(struct lws* wsi, ServerContext* ctx);
 void handleDisconnection(struct lws* wsi, ServerContext* ctx);

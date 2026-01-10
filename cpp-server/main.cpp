@@ -86,6 +86,9 @@ static int callback_game_protocol(struct lws *wsi, enum lws_callback_reasons rea
                 else if (type == "next_question") {
                     handleNextQuestion(wsi, ctx);
                 }
+                else if (type == "show_answer") {
+                    handleShowAnswer(wsi, ctx);
+                }
                 else if (type == "next_round") {
                     handleNextRound(wsi, ctx);
                 }

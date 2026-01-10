@@ -75,6 +75,9 @@ function handleMessage(message) {
         case 'answer_received':
             handleAnswerReceived(message);
             break;
+        case 'show_answer':
+            handleShowAnswer(message);
+            break;
         case 'question_results':
             handleQuestionResults(message);
             break;
@@ -287,6 +290,11 @@ function submitTiebreakAnswer(event) {
     console.log('Tiebreak answer submitted:', answer);
 }
 
+// Show answer - fast forward to results (host only)
+function showAnswer() {
+    sendMessage({ type: 'show_answer' });
+}
+
 // Next question (host only)
 function nextQuestion() {
     sendMessage({ type: 'next_question' });
@@ -365,6 +373,13 @@ function handleNewQuestion(message) {
     // Hide feedback
     document.getElementById('answer-feedback').classList.add('hidden');
     
+    // Show "Show Answer" button for host during Round 1
+    if (isHost && message.round === 1) {
+        document.getElementById('show-answer-btn').style.display = 'inline-block';
+    } else {
+        document.getElementById('show-answer-btn').style.display = 'none';
+    }
+    
     showScreen('question-screen');
 }
 
@@ -382,6 +397,12 @@ function handleAnswerReceived(message) {
     }
     
     feedback.classList.remove('hidden');
+}
+
+// Handle show answer (skip waiting for all players to submit)
+function handleShowAnswer(message) {
+    // Show results immediately
+    handleQuestionResults(message);
 }
 
 // Handle question results
@@ -1243,7 +1264,6 @@ function handlePackComplete(message) {
     
     let html = '<div class="pack-complete-container">';
     html += `<h2> Pack Complete!</h2>`;
-    html += `<p class="pack-player">${message.playerName || currentPackPlayer}</p>`;
     const totalRound2Score = message.totalRound2Score !== undefined ? message.totalRound2Score : (message.score || currentPackScore);
     html += `<p class="final-score">Round 2 Total: ${totalRound2Score}</p>`;
     
@@ -1630,9 +1650,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const nextQuestionBtn = document.getElementById('next-question-btn');
     const nextRoundBtn = document.getElementById('next-round-btn');
     const roundCompleteNextBtn = document.getElementById('round-complete-next-btn');
+    const showAnswerBtn = document.getElementById('show-answer-btn');
     if (nextQuestionBtn) nextQuestionBtn.addEventListener('click', nextQuestion);
     if (nextRoundBtn) nextRoundBtn.addEventListener('click', nextRound);
     if (roundCompleteNextBtn) roundCompleteNextBtn.addEventListener('click', nextRound);
+    if (showAnswerBtn) showAnswerBtn.addEventListener('click', showAnswer);
     
     // Round 2 buttons
     const continueFromSpeedBtn = document.getElementById('continue-from-speed-btn');

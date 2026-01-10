@@ -304,6 +304,15 @@ void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerConte
     auto player = findPlayerByWsi(game, wsi);
     if (!player || player->hasAnswered) return;
     
+    // Reject answers from eliminated players
+    if (player->isEliminated) {
+        json response;
+        response["type"] = "error";
+        response["message"] = "You have been eliminated and cannot answer";
+        sendToClient(wsi, response.dump());
+        return;
+    }
+    
     player->hasAnswered = true;
     player->answerTime = std::chrono::steady_clock::now();
     
@@ -338,6 +347,7 @@ void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerConte
         json results;
         results["type"] = "question_results";
         results["correctAnswer"] = question.correctAnswer;
+        results["round"] = game->currentRound;
         
         json scores = json::object();
         for (const auto& p : game->players) {
@@ -349,15 +359,43 @@ void handleSubmitAnswer(struct lws* wsi, int questionId, int answer, ServerConte
     }
 }
 
+void handleShowAnswer(struct lws* wsi, ServerContext* ctx) {
+    auto game = findGameByWsi(wsi, ctx);
+    if (!game) return;
+    
+    if (game->hostWsi != wsi) return;
+    
+    // Only available during Round 1
+    if (game->currentRound != 1) return;
+    
+    const auto& question = game->questions[game->currentQuestion];
+    
+    // Show results immediately without waiting for all players to answer
+    json results;
+    results["type"] = "show_answer";
+    results["correctAnswer"] = question.correctAnswer;
+    results["round"] = game->currentRound;
+    
+    json scores = json::object();
+    for (const auto& p : game->players) {
+        scores[p->id] = p->roundScore;
+    }
+    results["scores"] = scores;
+    
+    broadcastToGame(game->pin, results.dump(), nullptr, ctx);
+}
+
 void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
     auto game = findGameByWsi(wsi, ctx);
     if (!game) return;
     
     if (game->hostWsi != wsi) return;
     
-    // Reset answered status
+    // Reset answered status only for active (non-eliminated) players
     for (auto& p : game->players) {
-        p->hasAnswered = false;
+        if (!p->isEliminated) {
+            p->hasAnswered = false;
+        }
     }
     game->answers.clear();
     
@@ -474,7 +512,7 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
         return;
     }
     
-    // Send next question
+    // Send next question only to active (non-eliminated) players
     const auto& q = game->questions[game->currentQuestion];
     json questionMsg;
     questionMsg["type"] = "new_question";
@@ -486,7 +524,7 @@ void handleNextQuestion(struct lws* wsi, ServerContext* ctx) {
     questionMsg["totalQuestions"] = game->questionsPerRound;
     questionMsg["round"] = game->currentRound;
     
-    broadcastToGame(game->pin, questionMsg.dump(), nullptr, ctx);
+    broadcastToActivePlayers(game->pin, questionMsg.dump(), nullptr, ctx);
 }
 
 void handleNextRound(struct lws* wsi, ServerContext* ctx) {
@@ -1331,7 +1369,6 @@ void handleSubmitPackAnswer(struct lws* wsi, const std::string& answer, int ques
         // Broadcast pack completion
         json completeMsg;
         completeMsg["type"] = "pack_complete";
-        completeMsg["playerName"] = playerName;
         completeMsg["score"] = game->currentPackScore;
         completeMsg["totalQuestions"] = game->currentPack->questions.size();
         completeMsg["totalRound2Score"] = game->round2Scores[game->currentPackPlayerId];
@@ -1392,7 +1429,6 @@ void handlePackAnswerVerified(struct lws* wsi, bool isCorrect, int questionIndex
         // Broadcast pack completion
         json completeMsg;
         completeMsg["type"] = "pack_complete";
-        completeMsg["playerName"] = playerName;
         completeMsg["score"] = game->currentPackScore;
         completeMsg["totalQuestions"] = game->currentPack->questions.size();
         completeMsg["totalRound2Score"] = game->round2Scores[game->currentPackPlayerId];
@@ -1448,7 +1484,6 @@ void handleEndPackEarly(struct lws* wsi, ServerContext* ctx) {
     // Broadcast pack completion (even though not all questions answered)
     json completeMsg;
     completeMsg["type"] = "pack_complete";
-    completeMsg["playerName"] = playerName;
     completeMsg["score"] = game->currentPackScore;
     completeMsg["totalQuestions"] = game->currentPack->questions.size();
     completeMsg["totalRound2Score"] = game->round2Scores[game->currentPackPlayerId];
@@ -1679,7 +1714,18 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
     player->isEliminated = true;
     player->connected = false;
     
-    std::cout << " Player " << playerName << " (" << playerId << ") has left the game" << std::endl;
+    // Remove from active players list
+    game->activePlayers.erase(
+        std::remove(game->activePlayers.begin(), game->activePlayers.end(), player),
+        game->activePlayers.end()
+    );
+    
+    // Add to eliminated players list if not already there
+    if (std::find(game->eliminatedPlayers.begin(), game->eliminatedPlayers.end(), player) == game->eliminatedPlayers.end()) {
+        game->eliminatedPlayers.push_back(player);
+    }
+    
+    std::cout << " Player " << playerName << " (" << playerId << ") has left the game and been eliminated" << std::endl;
     
     // Broadcast player elimination to all remaining players
     json eliminationMsg;
@@ -1701,7 +1747,6 @@ void handleLeaveGame(struct lws* wsi, ServerContext* ctx) {
         // Broadcast pack completion
         json completeMsg;
         completeMsg["type"] = "pack_complete";
-        completeMsg["playerName"] = playerName;
         completeMsg["score"] = game->currentPackScore;
         completeMsg["totalQuestions"] = game->currentPack->questions.size();
         completeMsg["totalRound2Score"] = game->round2Scores[playerId];
